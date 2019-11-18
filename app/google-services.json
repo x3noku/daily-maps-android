@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "477910988116",
+    "firebase_url": "https://daily-maps-f9f5f.firebaseio.com",
+    "project_id": "daily-maps-f9f5f",
+    "storage_bucket": "daily-maps-f9f5f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:477910988116:android:6fa47be87671bb04a904c1",
+        "android_client_info": {
+          "package_name": "com.x3noku.dailymaps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "477910988116-8pcbpi6efc45sdk8t4dl9tfhuirep9vb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMXAtAc48qDUdo9v1ltcO1DCbLRN5hk7g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "477910988116-8pcbpi6efc45sdk8t4dl9tfhuirep9vb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
