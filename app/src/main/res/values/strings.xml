@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">Daily.Maps</string>
+
+    <!-- Bottom Navigation Titles -->
+    <string name="bottom_navigation_home_title">Главная</string>
+    <string name="bottom_navigation_add_task_title">Добавить задачу</string>
+    <string name="bottom_navigation_profile_title">Профиль</string>
+
+    <!-- Hints -->
+    <string name="hint_field_email">Email</string>
+    <string name="hint_field_password">Пароль</string>
+    <string name="hint_button_login">Войти</string>
+    <string name="hint_link_register">Ещё не  зарегемтрированы?</string>
+
+    <!-- DataBase Names  -->
+    <string name="firestore_users_collection">users</string>
+
 </resources>
