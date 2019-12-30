@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.ViewParent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -20,7 +19,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
-
 
 class LoginActivity : AppCompatActivity(),  View.OnClickListener {
 
@@ -54,9 +52,6 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
         super.onStart()
 
         val currentUser = firebaseAuth.currentUser
-        Toast
-            .makeText(baseContext, "${currentUser?.displayName} is  authorized", Toast.LENGTH_SHORT)
-            .show()
         updateUI(currentUser)
     }
 
@@ -140,16 +135,18 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                                     .document(currentUserId)
                                     .set( UserInfo(currentUserName) )
                                     .addOnCompleteListener {
-                                        Toast.makeText(baseContext, "READY", Toast.LENGTH_SHORT).show()
+                                        updateUI(currentUser)
                                     }
                             }
                         }
                     }
-                    else {
-                        // ToDo: CURRENT USER IS NULL, WTF
-                        Log.d(TAG, "GoogleAuth returned null user")
-                    }
                 }
+            }
+            .addOnFailureListener { exception ->
+                Toast
+                    .makeText(baseContext, "Something went wrong!", Toast.LENGTH_SHORT)
+                    .show()
+                // ToDo: REPLACE THIS TOAST WITH SNACKBAR
             }
     }
 

@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Daily.Maps</string>
 
+    <!-- Page Titles -->
+    <string name="task_list_toolbar_title">ЗАДАЧИ</string>
+
     <!-- Bottom Navigation Titles -->
     <string name="bottom_navigation_home_title">Главная</string>
     <string name="bottom_navigation_add_task_title">Добавить задачу</string>
@@ -14,5 +17,6 @@
 
     <!-- DataBase Names  -->
     <string name="firestore_users_collection">users</string>
+    <string name="firestore_tasks_collection">tasks</string>
 
 </resources>

@@ -6,7 +6,7 @@
         android:title="@string/bottom_navigation_home_title" />
     <item
         android:id="@+id/bottom_navigation_add_task_item"
-        android:icon="@drawable/add_button"
+        android:icon="@drawable/add"
         android:title="@string/bottom_navigation_add_task_title" />
     <item
         android:id="@+id/bottom_navigation_profile_item"

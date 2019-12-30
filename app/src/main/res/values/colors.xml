@@ -8,4 +8,8 @@
     <color name="colorBackgroundBottomNavigation">#FFFFFF</color>
     <color name="colorBottomNavigationChecked">#A5B5E7</color>
     <color name="colorBottomNavigationUnchecked">#989CA7</color>
+
+    <!-- Const Color -->
+    <color name="WHITE">#FFFFFF</color>
+    <color name="BLACK">#000000</color>
 </resources>

@@ -2,11 +2,14 @@ package com.x3noku.dailymaps
 
 import java.util.*
 
-class UserInfo constructor( var nickname: String = "User" ) {
+class UserInfo {
+    var nickname: String
+    var taskIds: MutableList<String>
+    var templateIds: MutableList<String>
 
-    init {
-        var taskIds: MutableList<String> = LinkedList()
-        var templateIds: MutableList<String> = LinkedList()
+    constructor(nickname: String = "User" ) {
+        this.nickname = nickname
+        this.taskIds = LinkedList()
+        this.templateIds = LinkedList()
     }
-
 }

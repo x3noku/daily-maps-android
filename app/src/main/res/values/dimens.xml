@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Page Titles -->
+    <dimen name="task_list_toolbar_title_text_size">30sp</dimen>
+
+</resources>
