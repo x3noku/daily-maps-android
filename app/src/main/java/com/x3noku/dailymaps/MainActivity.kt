@@ -27,10 +27,13 @@ class MainActivity : AppCompatActivity() {
             when(menuItem.itemId) {
                 R.id.bottom_navigation_home_item -> {
                     fragmentTransaction.replace(R.id.main_frame_layout, taskListFragment)
+
                     true
                 }
                 R.id.bottom_navigation_add_task_item -> {
-                    Log.d(TAG, "ADD TASK")
+                    val addTask = AddTask()
+                    addTask.show(supportFragmentManager, "AddTask")
+
                     true
                 }
                 R.id.bottom_navigation_profile_item -> {
