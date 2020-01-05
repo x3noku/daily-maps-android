@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.bottom_navigation_add_task_item -> {
-                    val addTask = AddTask()
+                    val addTask = AddTask( bottomNavigationView.selectedItemId )
                     addTask.show(supportFragmentManager, "AddTask")
 
                     true

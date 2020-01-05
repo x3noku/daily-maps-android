@@ -26,10 +26,10 @@ class TaskList : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
         val currentUser = firebaseAuth.currentUser
 
-        if( currentUser != null ) {
+        currentUser?.let {
             val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
             userDocumentReference.addSnapshotListener { snapshot, e ->
-                if(e != null) {
+                e?.let {
                     Log.w(TAG, "Listen failed with '${e.message}' exception!")
                 }
                 if( snapshot != null && snapshot.exists() ) {
@@ -40,10 +40,7 @@ class TaskList : Fragment() {
                     Log.d(TAG, "$userInfo")
                 }
             }
-        }
-        else {
-            startActivity( Intent(context, LoginActivity::class.java) )
-        }
+        } ?: startActivity( Intent(context, LoginActivity::class.java) )
 
         return rootView
     }

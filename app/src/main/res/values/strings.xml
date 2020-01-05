@@ -3,6 +3,14 @@
 
     <!-- Page Titles -->
     <string name="task_list_toolbar_title">ЗАДАЧИ</string>
+    <string name="add_task_toolbar_title">ДОБАВЛЕНИЕ ЗАДАНИЯ</string>
+
+    <!-- Add Task Fragment -->
+    <string name="add_task_start_time_title">Время начала</string>
+    <string name="add_task_duration_title">Длительность</string>
+    <string name="add_task_priority_title">Приоритет</string>
+
+
 
     <!-- Bottom Navigation Titles -->
     <string name="bottom_navigation_home_title">Главная</string>
@@ -13,10 +21,12 @@
     <string name="hint_field_email">Email</string>
     <string name="hint_field_password">Пароль</string>
     <string name="hint_button_login">Войти</string>
-    <string name="hint_link_register">Ещё не  зарегемтрированы?</string>
+    <string name="hint_link_register">Ещё не  зарегестрированы?</string>
 
     <!-- DataBase Names  -->
     <string name="firestore_users_collection">users</string>
     <string name="firestore_tasks_collection">tasks</string>
+
+    <string name="GOOGLE_API_KEY">AIzaSyA2r1XJCQJf6xLdbm3GeFsWaUtnA8sSwO0</string>
 
 </resources>
