@@ -9,7 +9,7 @@
     tools:context=".TaskList">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/activity_main_toolbar"
+        android:id="@+id/add_task_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorBackground"
@@ -39,7 +39,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_main_toolbar">
+        app:layout_constraintTop_toBottomOf="@+id/add_task_toolbar">
 
         <LinearLayout
             android:id="@+id/task_list_linear_layout"

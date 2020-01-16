@@ -1,7 +1,10 @@
 package com.x3noku.dailymaps
 
 import android.Manifest
+import android.app.AlertDialog
+import android.app.TimePickerDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
@@ -9,23 +12,47 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentTransaction
+import com.github.zawadz88.materialpopupmenu.popupMenu
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import xyz.aprildown.hmspickerview.HmsPickerView
 
+class AddTask() : DialogFragment() {
 
-class AddTask(private val previousSelectedItemId: Int) : DialogFragment() {
+    private val TAG = "AddTask"
+    private val My_Permissions_Request_Location = 89
 
-    val TAG = "AddTask"
-    private val MY_PERMISSIONS_REQUEST_LOCATION = 89
+    private var previousSelectedItemId: Int? = null
+    private var idOfEditableFile: String? = null
+    private var bottomSheetDialog: BottomSheetDialog? = null
+
+    constructor(previousSelectedItemId: Int) : this() {
+        this.previousSelectedItemId = previousSelectedItemId
+    }
+
+    constructor(idOfEditableFile: String, bottomSheetDialog: BottomSheetDialog) : this() {
+        this.idOfEditableFile = idOfEditableFile
+        this.bottomSheetDialog = bottomSheetDialog
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,32 +73,283 @@ class AddTask(private val previousSelectedItemId: Int) : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         val rootView = inflater.inflate(R.layout.fragment_add_task, container, false)
+        val firestore = FirebaseFirestore.getInstance()
+        val firebaseAuth = FirebaseAuth.getInstance()
+        val currentUser = firebaseAuth.currentUser
+        var task = Task()
 
-        val mapFragment = fragmentManager!!.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync { googleMap ->
-            googleMap.isMyLocationEnabled = true
-            try {
-                val locationManager = context!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                location?.let {
-                    val userLocation = LatLng(location.latitude, location.longitude)
-                    val camPos = CameraPosition.Builder()
-                        .target(userLocation)
-                        .zoom(12.2f)
-                        .build()
-                    val camUpdate = CameraUpdateFactory.newCameraPosition(camPos)
-                    googleMap.moveCamera(camUpdate)
+        run {
+            val toolbar = rootView.findViewById<Toolbar>(R.id.add_task_toolbar)
+            val startTimeInputTextView = rootView.findViewById<TextView>(R.id.add_task_start_time_input)
+            val durationInputTextView = rootView.findViewById<TextView>(R.id.add_task_duration_input)
+            val priorityInputTextView = rootView.findViewById<TextView>(R.id.add_task_priority_input)
+            val textInputEditText = rootView.findViewById<EditText>(R.id.add_task_text_input)
+            val saveTaskImageButton = rootView.findViewById<ImageButton>(R.id.add_task_toolbar_action_image_button)
+            lateinit var googleMap: GoogleMap
+            var marker: Marker? = null
+
+            val mapFragment = fragmentManager!!.findFragmentById(R.id.map) as SupportMapFragment
+            mapFragment.getMapAsync { gMap ->
+                googleMap = gMap
+                googleMap.isMyLocationEnabled = true
+                try {
+                    val locationManager = context!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                    val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    location?.let {
+                        val userLocation = LatLng(location.latitude, location.longitude)
+                        val camPos = CameraPosition.Builder()
+                            .target(userLocation)
+                            .zoom(12.2f)
+                            .build()
+                        val camUpdate = CameraUpdateFactory.newCameraPosition(camPos)
+                        googleMap.moveCamera(camUpdate)
+                    }
+
+                }
+                catch (e: SecurityException) {
+                    Log.w(TAG, "onMapReady: UserInfo Rejected Location Request");
                 }
 
-            }
-            catch (e: SecurityException) {
-                Log.w(TAG, "onMapReady: UserInfo Rejected Location Request");
+                googleMap.setOnMapClickListener { latLng ->
+                    marker?.remove()
+                    marker = googleMap.addMarker(MarkerOptions().position(latLng))
+                    task.coords = latLng
+                }
             }
 
-            var marker: Marker? = null
-            googleMap.setOnMapClickListener { latLng ->
-                marker?.remove()
-                marker = googleMap.addMarker(MarkerOptions().position(latLng))
+            idOfEditableFile?.let { idOfEditableFile ->
+                val editableFileDocumentReference = firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(idOfEditableFile)
+                editableFileDocumentReference.get().addOnSuccessListener { documentSnapshot ->
+                    task = Task(documentSnapshot)
+                    textInputEditText.setText(task.text)
+                    run {
+                        val hours = task.startTime.toHours()
+                        val minutes = task.startTime.toMinutes()
+                        startTimeInputTextView.text = "$hours:${if (minutes < 10) "0$minutes" else "$minutes"}"
+                    }
+                    run {
+                        val minutes = task.duration.toMinutes()
+                        val hours = task.duration.toHours()
+
+                        val hoursString = when(hours) {
+                            0 -> ""
+                            in 11..19 -> "$hours часов "
+                            else -> when (hours%10) {
+                                1 -> "$hours час "
+                                in 2..4 -> "$hours часа "
+                                in 5..9 -> "$hours часов "
+                                else -> "$hours часов "
+                            }
+                        }
+                        val minutesString = when(minutes) {
+                            0 -> if( hoursString.isNotBlank() ) "" else "$minutes минут"
+                            in 11..19 -> "$minutes минут"
+                            else -> when (minutes%10) {
+                                1 -> "$minutes минута"
+                                in 2..4 -> "$minutes минуты"
+                                in 5..9 -> "$minutes минут"
+                                else -> "$minutes минут"
+                            }
+                        }
+
+                        durationInputTextView.text =  "$hoursString$minutesString"
+                    }
+                    run {
+                        when(task.priority) {
+                            0 -> {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_max_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMaxPriority) )
+                            }
+                            1 -> {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_high_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskHighPriority) )
+                            }
+                            2 -> {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_mid_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMidPriority) )
+                            }
+                            3 -> {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_low_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskLowPriority) )
+                            }
+                            else -> {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_min_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMinPriority) )
+                            }
+                        }
+                    }
+                    task.coords?.let { latLng ->
+                        marker?.remove()
+                        marker = googleMap.addMarker(MarkerOptions().position(latLng))
+                    }
+                }
+            }
+
+            toolbar.setNavigationOnClickListener {
+                dismiss()
+            }
+
+            startTimeInputTextView.setOnClickListener {
+                val timePickerDialog = TimePickerDialog(
+                    activity,
+                    {_, hours, minutes ->
+                        task.startTime = hours*60 + minutes
+                        startTimeInputTextView.text = "$hours:${if (minutes < 10) "0$minutes" else "$minutes"}"
+                    },
+                    task.startTime.toHours(),
+                    task.startTime.toMinutes(),
+                    true
+                )
+                timePickerDialog.show()
+                timePickerDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+                timePickerDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+            }
+
+            durationInputTextView.setOnClickListener {
+                val hmsPickerDialog = AlertDialog.Builder(context)
+                    .setView(R.layout.hms_picker_layout)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+                run {
+                    val hmsPickerView = hmsPickerDialog.findViewById<HmsPickerView>(R.id.hms_picker_view)!!
+                    hmsPickerView.setHours( task.duration.toHours() )
+                    hmsPickerView.setMinutes( task.duration.toMinutes() )
+
+                    hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+                    hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+                    hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setBackgroundColor( ContextCompat.getColor(context!!, R.color.WHITE) )
+                    hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setBackgroundColor( ContextCompat.getColor(context!!, R.color.WHITE) )
+
+                    hmsPickerDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
+                        val duration: Int = hmsPickerView.getHours()*60 + hmsPickerView.getMinutes()
+                        task.duration = duration
+
+                        val minutes = duration.toMinutes()
+                        val hours = duration.toHours()
+
+                        val hoursString = when(hours) {
+                            0 -> ""
+                            in 11..19 -> "$hours часов "
+                            else -> when (hours%10) {
+                                1 -> "$hours час "
+                                in 2..4 -> "$hours часа "
+                                in 5..9 -> "$hours часов "
+                                else -> "$hours часов "
+                            }
+                        }
+                        val minutesString = when(minutes) {
+                            0 -> if( hoursString.isNotBlank() ) "" else "$minutes минут"
+                            in 11..19 -> "$minutes минут"
+                            else -> when (minutes%10) {
+                                1 -> "$minutes минута"
+                                in 2..4 -> "$minutes минуты"
+                                in 5..9 -> "$minutes минут"
+                                else -> "$minutes минут"
+                            }
+                        }
+                        durationInputTextView.text =  "$hoursString$minutesString"
+                    }
+                }
+            }
+
+            priorityInputTextView.setOnClickListener {
+                val popupMenu = popupMenu {
+                    section {
+                        item {
+                            label = "Макс."
+                            icon = R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskMaxPriority)
+                            callback = {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_max_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMaxPriority) )
+                                task.priority = 0
+                            }
+                        }
+                        item {
+                            label = "Высокий"
+                            icon = R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskHighPriority)
+                            callback = {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_high_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskHighPriority) )
+                                task.priority = 1
+                            }
+                        }
+                        item {
+                            label = "Средний"
+                            icon = R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskMidPriority)
+                            callback = {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_mid_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMidPriority) )
+                                task.priority = 2
+                            }
+                        }
+                        item {
+                            label = "Низкий"
+                            icon = R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskLowPriority)
+                            callback = {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_low_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskLowPriority) )
+                                task.priority = 3
+                            }
+                        }
+                        item {
+                            label = "Мин."
+                            icon = R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskMinPriority)
+                            callback = {
+                                priorityInputTextView.text = resources.getString(R.string.add_task_min_priority)
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMinPriority) )
+                                task.priority = 4
+                            }
+                        }
+                    }
+                }
+                popupMenu.show(context!!, it)
+            }
+
+            textInputEditText.addTextChangedListener {
+                task.text = it.toString().replace("\\s+".toRegex(), " ")
+            }
+
+            saveTaskImageButton.setOnClickListener {
+                if( task.text.isNotBlank() ) {
+                    idOfEditableFile?.let { idOfEditableFile ->
+                        firestore
+                            .collection(resources.getString(R.string.firestore_tasks_collection))
+                            .document(idOfEditableFile)
+                            .delete()
+                            .addOnSuccessListener {
+                                val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser!!.uid)
+                                userDocumentReference.update("taskIds", FieldValue.arrayRemove(idOfEditableFile))
+                                firestore
+                                    .collection(resources.getString(R.string.firestore_tasks_collection))
+                                    .add(task)
+                                    .addOnSuccessListener { documentReference ->
+                                        userDocumentReference
+                                            .update("taskIds", FieldValue.arrayUnion(documentReference.id) )
+                                            .addOnSuccessListener {
+                                                dismiss()
+                                            }
+                                    }
+                            }
+                    } ?: run {
+                        val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser!!.uid)
+                        firestore
+                            .collection(resources.getString(R.string.firestore_tasks_collection))
+                            .add(task)
+                            .addOnSuccessListener { documentReference ->
+                                userDocumentReference
+                                    .update("taskIds", FieldValue.arrayUnion(documentReference.id) )
+                                    .addOnSuccessListener {
+                                        dismiss()
+                                    }
+                            }
+                    }
+                }
             }
         }
 
@@ -86,8 +364,11 @@ class AddTask(private val previousSelectedItemId: Int) : DialogFragment() {
         fragmentTransaction.remove(mapFragment)
         fragmentTransaction.commit()
 
-        val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        bottomNavigationView?.selectedItemId = previousSelectedItemId
+        bottomSheetDialog?.dismiss()
+        previousSelectedItemId?.let {
+            val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)
+            bottomNavigationView?.selectedItemId = it
+        }
     }
 
     private fun checkLocationPermission() {
@@ -96,8 +377,12 @@ class AddTask(private val previousSelectedItemId: Int) : DialogFragment() {
             &&
             ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MY_PERMISSIONS_REQUEST_LOCATION)
+            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), My_Permissions_Request_Location)
         }
     }
+
+    private fun Int.toHours(): Int = this/60
+
+    private fun Int.toMinutes(): Int = this%60
 
 }

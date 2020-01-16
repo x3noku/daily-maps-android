@@ -14,7 +14,7 @@
         app:elevation="0dp">
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/activity_main_toolbar"
+            android:id="@+id/add_task_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorBackground"
@@ -127,11 +127,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:drawableStart="@drawable/ic_fiber_manual_record_black_24dp"
+                    android:drawablePadding="-8dp"
                     android:fontFamily="@font/roboto_light"
                     android:gravity="bottom|center_horizontal"
                     android:text="Средний"
                     android:textColor="@color/GREY"
-                    android:textSize="@dimen/add_task_priority_input_text_size" />
+                    android:textSize="@dimen/add_task_priority_input_text_size"
+                    app:drawableTint="#FFD3B6" />
 
             </TableRow>
 
@@ -149,7 +152,7 @@
                 android:layout_weight="1" />
 
             <EditText
-                android:id="@+id/editText4"
+                android:id="@+id/add_task_text_input"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

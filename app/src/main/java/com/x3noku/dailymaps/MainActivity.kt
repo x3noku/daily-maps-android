@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
 
         val fragmentTransaction: FragmentTransaction = supportFragmentManager.beginTransaction()
         fragmentTransaction.add(R.id.main_frame_layout, taskListFragment)
-        fragmentTransaction.commit()
+        fragmentTransaction.commit()                                                            
 
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->

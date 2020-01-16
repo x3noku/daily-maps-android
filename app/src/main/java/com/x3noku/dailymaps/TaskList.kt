@@ -23,8 +23,8 @@ class TaskList : Fragment() {
         val rootView = inflater.inflate(R.layout.fragment_task_list, container, false)
 
         val firebaseAuth = FirebaseAuth.getInstance()
-        val firestore = FirebaseFirestore.getInstance()
         val currentUser = firebaseAuth.currentUser
+        val firestore = FirebaseFirestore.getInstance()
 
         currentUser?.let {
             val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
@@ -45,25 +45,43 @@ class TaskList : Fragment() {
         return rootView
     }
 
-    private fun LinearLayout.buildTaskCards(taskList: List<Any>) {
-        for( task in taskList ) {
-            val taskView = LayoutInflater.from(context).inflate(R.layout.task_layout, this, false)
+    private fun LinearLayout.buildTaskCards(taskIdList: List<String>) {
+        val firestore = FirebaseFirestore.getInstance()
+        this.removeAllViews()
 
-            val taskViewCheckBox = taskView.findViewById<CheckBox>(R.id.task_checkbox)
-            val taskViewPrimaryTextView = taskView.findViewById<TextView>(R.id.task_text_primary)
-            val taskViewSecondaryTextView = taskView.findViewById<TextView>(R.id.task_text_secondary)
-            val taskViewImageButton = taskView.findViewById<ImageButton>(R.id.task_image_button)
+        for( taskId in taskIdList ) {
+            firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(taskId).get().addOnSuccessListener { documentSnapshot ->
+                val task = Task(documentSnapshot)
+                val taskView = LayoutInflater.from(context).inflate(R.layout.task_layout, this, false)
 
-            taskViewPrimaryTextView.text = "Hello World!"
-            taskViewSecondaryTextView.text = "Hello World!"
-            taskViewImageButton.setOnClickListener {
-                val bottomSheetView = LayoutInflater.from(context).inflate(R.layout.task_bottom_sheet_layout, null)
-                val bottomSheetDialog = BottomSheetDialog(context)
-                bottomSheetDialog.setContentView(bottomSheetView)
-                bottomSheetDialog.show()
+                val taskViewCheckBox = taskView.findViewById<CheckBox>(R.id.task_checkbox)
+                val taskViewPrimaryTextView = taskView.findViewById<TextView>(R.id.task_text_primary)
+                val taskViewSecondaryTextView = taskView.findViewById<TextView>(R.id.task_text_secondary)
+                val taskViewImageButton = taskView.findViewById<ImageButton>(R.id.task_image_button)
+
+                taskViewPrimaryTextView.text = task.text
+                taskViewSecondaryTextView.text = "12:00"
+                taskViewImageButton.setOnClickListener {
+                    val bottomSheetView = LayoutInflater.from(context)
+                        .inflate(R.layout.task_bottom_sheet_layout, null)
+                    val bottomSheetDialog = BottomSheetDialog(context)
+                    bottomSheetDialog.setContentView(bottomSheetView)
+
+                    val editOptionTextView =
+                        bottomSheetView.findViewById<TextView>(R.id.sheet_option_edit)
+                    val deleteOptionTextView =
+                        bottomSheetView.findViewById<TextView>(R.id.sheet_option_delete)
+
+                    editOptionTextView.setOnClickListener {
+                        val addTask = AddTask(taskId, bottomSheetDialog)
+                        addTask.show(activity!!.supportFragmentManager, "AddTask")
+                    }
+
+                    bottomSheetDialog.show()
+                }
+
+                addView(taskView)
             }
-
-            addView(taskView)
         }
     }
 

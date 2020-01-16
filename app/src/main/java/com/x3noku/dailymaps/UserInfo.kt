@@ -4,9 +4,9 @@ import com.google.firebase.firestore.DocumentSnapshot
 import java.util.*
 
 class UserInfo {
-    var nickname: String
-    var taskIds: MutableList<String>
-    var templateIds: MutableList<String>
+    var nickname: String = ""
+    var taskIds: MutableList<String> = mutableListOf()
+    var templateIds: MutableList<String> = mutableListOf()
 
     constructor(nickname: String = "User" ) {
         this.nickname = nickname
@@ -16,9 +16,10 @@ class UserInfo {
 
     constructor(userInfoSnapshot: DocumentSnapshot) {
         val userInfoMap = userInfoSnapshot.data
-
-        this.nickname = if (userInfoMap != null) userInfoMap["nickname"] as String else ""
-        this.taskIds = if (userInfoMap != null) userInfoMap["taskIds"] as MutableList<String> else mutableListOf()
-        this.templateIds = if (userInfoMap != null) userInfoMap["templateIds"] as MutableList<String> else mutableListOf()
+        userInfoMap?.let {
+            this.nickname = userInfoMap["nickname"] as String
+            this.taskIds = userInfoMap["taskIds"] as MutableList<String>
+            this.templateIds = userInfoMap["templateIds"] as MutableList<String>
+        }
     }
 }

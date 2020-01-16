@@ -15,4 +15,11 @@
     <color name="BLACK">#000000</color>
     <color name="GREY">#B2B2B2</color>
 
+    <!-- Priority Colors -->
+    <color name="addTaskMaxPriority">#FF8B94</color>
+    <color name="addTaskHighPriority">#FFAAA5</color>
+    <color name="addTaskMidPriority">#FFD3B6</color>
+    <color name="addTaskLowPriority">#DCEDC1</color>
+    <color name="addTaskMinPriority">#A8E6CF</color>
+
 </resources>
