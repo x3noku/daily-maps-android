@@ -43,7 +43,6 @@ class AddTask() : DialogFragment() {
 
     private var previousSelectedItemId: Int? = null
     private var idOfEditableFile: String? = null
-    private var bottomSheetDialog: BottomSheetDialog? = null
 
     constructor(previousSelectedItemId: Int) : this() {
         this.previousSelectedItemId = previousSelectedItemId
@@ -51,7 +50,6 @@ class AddTask() : DialogFragment() {
 
     constructor(idOfEditableFile: String, bottomSheetDialog: BottomSheetDialog) : this() {
         this.idOfEditableFile = idOfEditableFile
-        this.bottomSheetDialog = bottomSheetDialog
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -179,8 +177,15 @@ class AddTask() : DialogFragment() {
                         }
                     }
                     task.coords?.let { latLng ->
+                        val camPos = CameraPosition.Builder()
+                            .target(latLng)
+                            .zoom(12.2f)
+                            .build()
+                        val camUpdate = CameraUpdateFactory.newCameraPosition(camPos)
+                        googleMap.moveCamera(camUpdate)
                         marker?.remove()
                         marker = googleMap.addMarker(MarkerOptions().position(latLng))
+
                     }
                 }
             }
@@ -253,7 +258,7 @@ class AddTask() : DialogFragment() {
                 }
             }
 
-            priorityInputTextView.setOnClickListener {
+                priorityInputTextView.setOnClickListener {
                 val popupMenu = popupMenu {
                     section {
                         item {
@@ -364,7 +369,6 @@ class AddTask() : DialogFragment() {
         fragmentTransaction.remove(mapFragment)
         fragmentTransaction.commit()
 
-        bottomSheetDialog?.dismiss()
         previousSelectedItemId?.let {
             val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)
             bottomNavigationView?.selectedItemId = it

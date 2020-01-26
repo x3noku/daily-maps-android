@@ -10,8 +10,10 @@ import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -67,14 +69,31 @@ class TaskList : Fragment() {
                     val bottomSheetDialog = BottomSheetDialog(context)
                     bottomSheetDialog.setContentView(bottomSheetView)
 
+                    val addToTemplateOptionTextView =
+                        bottomSheetView.findViewById<TextView>(R.id.sheet_option_add_to_template)
                     val editOptionTextView =
                         bottomSheetView.findViewById<TextView>(R.id.sheet_option_edit)
                     val deleteOptionTextView =
                         bottomSheetView.findViewById<TextView>(R.id.sheet_option_delete)
 
+                    addToTemplateOptionTextView.setOnClickListener {
+                        bottomSheetDialog.dismiss()
+                        val addToTemplate = AddToTemplate()
+                        addToTemplate.show(fragmentManager!!, "")
+                    }
                     editOptionTextView.setOnClickListener {
+                        bottomSheetDialog.dismiss()
                         val addTask = AddTask(taskId, bottomSheetDialog)
                         addTask.show(activity!!.supportFragmentManager, "AddTask")
+                    }
+                    deleteOptionTextView.setOnClickListener {
+                        bottomSheetDialog.dismiss()
+                        Snackbar
+                            .make(rootView, "Задание будет удалено!", Snackbar.LENGTH_LONG)
+                            .setAction("Отмена", ({}))
+                            .setActionTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+                            .addCallback( DeleteSnackbarCallback(taskId) )
+                            .show()
                     }
 
                     bottomSheetDialog.show()

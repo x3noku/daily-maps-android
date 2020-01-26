@@ -13,11 +13,30 @@
     <TextView
 
 
+        android:id="@+id/sheet_option_add_to_template"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:drawableStart="@drawable/ic_add_black_24dp"
+        android:drawablePadding="@dimen/task_sheet_drawable_padding"
+        android:fontFamily="@font/roboto"
+        android:gravity="center_vertical"
+        android:padding="@dimen/task_sheet_line_padding"
+        android:text="Добавить в шаблон"
+        android:textColor="@color/BLACK"
+        android:textSize="@dimen/task_sheet_text_size" />
+
+    <TextView
+
+
         android:id="@+id/sheet_option_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
+        android:focusable="true"
         android:drawableStart="@drawable/ic_edit_black_24dp"
         android:drawablePadding="@dimen/task_sheet_drawable_padding"
         android:fontFamily="@font/roboto"
@@ -33,6 +52,7 @@
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
+        android:focusable="true"
         android:drawableStart="@drawable/ic_delete_black_24dp"
         android:drawablePadding="@dimen/task_sheet_drawable_padding"
         android:fontFamily="@font/roboto"

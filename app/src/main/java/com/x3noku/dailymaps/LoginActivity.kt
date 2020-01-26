@@ -7,7 +7,6 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -19,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.pranavpandey.android.dynamic.toasts.DynamicToast
 
 class LoginActivity : AppCompatActivity(),  View.OnClickListener {
 
@@ -68,14 +68,10 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                 }
             }
             catch (e: ApiException) {
-                // ToDo: LoginActivity - GOOGLE SIGN IN FAILED, realize error message
-                Log.w(TAG, "Google sign in failed", e)
-                Snackbar.make(
-                    rootView,
-                    e.toString(),
-                    Snackbar.LENGTH_SHORT
-                ).show()
-
+                DynamicToast
+                    .makeError(baseContext, "Не удалось авторизоваться: $e")
+                    .show()
+                Log.e(TAG, "Google sign in failed", e)
             }
         }
     }
@@ -90,8 +86,9 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                     authWithEmailAndPassword(email, password)
                 }
                 else {
-                    // ToDo: Say that something isn't correct
-                    print(0)
+                    Snackbar
+                        .make(rootView, "Неправильно указана почта или поле пароля не заполнено!", Snackbar.LENGTH_SHORT)
+                        .show()
                 }
             }
             R.id.sign_in_google_button -> {
@@ -142,11 +139,10 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                     }
                 }
             }
-            .addOnFailureListener { exception ->
-                Toast
-                    .makeText(baseContext, "Something went wrong!", Toast.LENGTH_SHORT)
+            .addOnFailureListener { e ->
+                DynamicToast
+                    .makeError(baseContext, "Авторизация не удалась: $e")
                     .show()
-                // ToDo: REPLACE THIS TOAST WITH SNACKBAR
             }
     }
 
@@ -158,7 +154,7 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                     updateUI(currentUser)
                 }
                 else {
-                    Snackbar.make( rootView, "", Snackbar.LENGTH_SHORT).show() // ToDo: MAKE TEXT
+                    DynamicToast.makeError(baseContext, "Не удалось авторизироваться!")
                 }
             }
     }

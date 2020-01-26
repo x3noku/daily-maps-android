@@ -2,7 +2,6 @@ package com.x3noku.dailymaps
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -13,6 +12,7 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
 
     private var taskListFragment = TaskList()
+    private var profileFragment = Profile()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,10 +24,11 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->
+            val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
             when(menuItem.itemId) {
                 R.id.bottom_navigation_home_item -> {
-                    fragmentTransaction.replace(R.id.main_frame_layout, taskListFragment)
-
+                    transaction.replace(R.id.main_frame_layout, taskListFragment)
+                    transaction.commit()
                     true
                 }
                 R.id.bottom_navigation_add_task_item -> {
@@ -37,7 +38,8 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.bottom_navigation_profile_item -> {
-                    Log.d(TAG, "PROFILE")
+                    transaction.replace(R.id.main_frame_layout, profileFragment)
+                    transaction.commit()
                     true
                 }
                 else -> false
@@ -52,11 +54,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     transaction.detach(taskListFragment).attach(taskListFragment).commit()
                 }
-                R.id.bottom_navigation_add_task_item -> {
-                    Log.d(TAG, "ADD TASK")
-                }
                 R.id.bottom_navigation_profile_item -> {
-                    Log.d(TAG, "PROFILE")
+                    val transaction = supportFragmentManager.beginTransaction()
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        transaction.setReorderingAllowed(false)
+                    }
+                    transaction.detach(profileFragment).attach(profileFragment).commit()
                 }
             }
         }

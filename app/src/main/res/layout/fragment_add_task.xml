@@ -37,7 +37,6 @@
                 android:textColor="@color/BLACK"
                 android:textSize="@dimen/add_task_toolbar_title_text_size" />
 
-
             <ImageButton
                 android:id="@+id/add_task_toolbar_action_image_button"
                 android:layout_width="?attr/actionBarSize"
