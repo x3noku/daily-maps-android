@@ -2,9 +2,13 @@
 <resources>
 
     <color name="colorBackground">#FEF8F8</color>
-    <color name="colorPrimary">#FEF8F8</color>
-    <color name="colorPrimaryDark">#cbc5c5</color>
+    <color name="colorPrimary">#CBC5C5</color>
+    <color name="colorPrimaryDark">#CBC5BB</color>
     <color name="colorAccent">#A5B5E7</color>
+    <color name="colorSecondary">#a5b5e7</color>
+    <color name="colorSecondaryLight">#d7e7ff</color>
+    <color name="colorSecondaryDark">#7585b5</color>
+
 
     <color name="colorBackgroundBottomNavigation">#FFFFFF</color>
     <color name="colorBottomNavigationChecked">#A5B5E7</color>

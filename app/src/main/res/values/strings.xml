@@ -17,7 +17,11 @@
     <string name="add_task_low_priority">Низкий</string>
     <string name="add_task_min_priority">Мин.</string>
 
+    <!-- Dialog Labels -->
+    <string name="template_title">Добавить в шаблон</string>
+    <string name="template_create_new">Новый шаблон</string>
 
+    <string name="dialog_cancel">ОТМЕНА</string>
 
     <!-- Bottom Navigation Titles -->
     <string name="bottom_navigation_home_title">Главная</string>
@@ -34,6 +38,7 @@
     <!-- DataBase Names  -->
     <string name="firestore_users_collection">users</string>
     <string name="firestore_tasks_collection">tasks</string>
+    <string name="firestore_templates_collection">templates</string>
 
     <string name="GOOGLE_API_KEY">AIzaSyA2r1XJCQJf6xLdbm3GeFsWaUtnA8sSwO0</string>
 

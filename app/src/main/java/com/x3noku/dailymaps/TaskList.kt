@@ -38,7 +38,7 @@ class TaskList : Fragment() {
                     val userInfo = UserInfo(snapshot)
                     val taskListLinearLayout = rootView.findViewById<LinearLayout>(R.id.task_list_linear_layout)
 
-                    taskListLinearLayout.buildTaskCards( userInfo.taskIds )
+                    taskListLinearLayout.buildTaskCards( userInfo.taskIds, currentUser.uid )
                     Log.d(TAG, "$userInfo")
                 }
             }
@@ -47,7 +47,7 @@ class TaskList : Fragment() {
         return rootView
     }
 
-    private fun LinearLayout.buildTaskCards(taskIdList: List<String>) {
+    private fun LinearLayout.buildTaskCards(taskIdList: List<String>, userId: String) {
         val firestore = FirebaseFirestore.getInstance()
         this.removeAllViews()
 
@@ -78,7 +78,7 @@ class TaskList : Fragment() {
 
                     addToTemplateOptionTextView.setOnClickListener {
                         bottomSheetDialog.dismiss()
-                        val addToTemplate = AddToTemplate()
+                        val addToTemplate = AddToTemplate(userId, documentSnapshot.id)
                         addToTemplate.show(fragmentManager!!, "")
                     }
                     editOptionTextView.setOnClickListener {

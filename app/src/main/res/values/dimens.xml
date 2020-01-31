@@ -16,12 +16,12 @@
 
 
     <!-- Task List Layout -->
-    <dimen name="task_list_checkbox_size">30dp</dimen>
+    <dimen name="task_list_checkbox_size">36dp</dimen>
     <dimen name="task_list_primary_text_size">16sp</dimen>
-    <dimen name="task_list_secondary_text_size">12sp</dimen>
+    <dimen name="task_list_secondary_text_size">14sp</dimen>
     <dimen name="task_list_secondary_button_size">@dimen/task_list_checkbox_size</dimen>
-    <dimen name="task_list_elements_margin">4dp</dimen>
-    <dimen name="task_list_padding">4dp</dimen>
+    <dimen name="task_list_elements_margin">2dp</dimen>
+    <dimen name="task_list_padding">6dp</dimen>
 
     <!-- Task List Bottom Sheet -->
     <dimen name="task_sheet_text_size">16sp</dimen>
