@@ -23,6 +23,14 @@
     <dimen name="task_list_elements_margin">2dp</dimen>
     <dimen name="task_list_padding">6dp</dimen>
 
+    <!-- Task List Layout -->
+    <dimen name="template_image_size">36dp</dimen>
+    <dimen name="template_primary_text_size">18sp</dimen>
+    <dimen name="template_secondary_text_size">14sp</dimen>
+    <dimen name="template_secondary_button_size">@dimen/task_list_checkbox_size</dimen>
+    <dimen name="template_elements_margin">2dp</dimen>
+    <dimen name="template_padding">10dp</dimen>
+
     <!-- Task List Bottom Sheet -->
     <dimen name="task_sheet_text_size">16sp</dimen>
     <dimen name="task_sheet_line_padding">16dp</dimen>

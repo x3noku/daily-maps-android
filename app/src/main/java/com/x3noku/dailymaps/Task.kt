@@ -9,7 +9,6 @@ class Task constructor(
     var duration: Int = 30,
     var priority: Int = 2,
     var coords: LatLng? = null,
-    var templateId: String? = null,
     var completed: Boolean = false
 ) {
 
@@ -27,7 +26,6 @@ class Task constructor(
             } else {
                 null
             }
-            this.templateId = taskMap["templateId"] as String?
             this.completed = taskMap["completed"] as Boolean
         }
     }

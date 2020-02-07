@@ -1,5 +1,6 @@
 package com.x3noku.dailymaps
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -14,13 +15,29 @@ class MainActivity : AppCompatActivity() {
     private var taskListFragment = TaskList()
     private var profileFragment = Profile()
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        this.intent = intent
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val data = intent.data
+        data?.let {
+            val type = it.pathSegments[it.pathSegments.lastIndex-1]
+            val id = it.pathSegments.last()
+
+            if(type == "tasks") {
+                val addTask = AddTask(id)
+                addTask.show(supportFragmentManager, "AddTask")
+            }
+        }
+
         val fragmentTransaction: FragmentTransaction = supportFragmentManager.beginTransaction()
         fragmentTransaction.add(R.id.main_frame_layout, taskListFragment)
-        fragmentTransaction.commit()                                                            
+        fragmentTransaction.commit()
 
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->

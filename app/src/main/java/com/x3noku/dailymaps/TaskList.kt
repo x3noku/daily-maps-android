@@ -1,6 +1,7 @@
 package com.x3noku.dailymaps
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,6 +16,8 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.dynamiclinks.DynamicLink
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FirebaseFirestore
 
 class TaskList : Fragment() {
@@ -62,7 +65,7 @@ class TaskList : Fragment() {
                 val taskViewImageButton = taskView.findViewById<ImageButton>(R.id.task_image_button)
 
                 taskViewPrimaryTextView.text = task.text
-                taskViewSecondaryTextView.text = "12:00"
+                taskViewSecondaryTextView.text = task.startTime.toDigitalView()
                 taskViewImageButton.setOnClickListener {
                     val bottomSheetView = LayoutInflater.from(context)
                         .inflate(R.layout.task_bottom_sheet_layout, null)
@@ -71,6 +74,8 @@ class TaskList : Fragment() {
 
                     val addToTemplateOptionTextView =
                         bottomSheetView.findViewById<TextView>(R.id.sheet_option_add_to_template)
+                    val shareOptionTextView =
+                        bottomSheetView.findViewById<TextView>(R.id.sheet_option_share)
                     val editOptionTextView =
                         bottomSheetView.findViewById<TextView>(R.id.sheet_option_edit)
                     val deleteOptionTextView =
@@ -81,11 +86,41 @@ class TaskList : Fragment() {
                         val addToTemplate = AddToTemplate(userId, documentSnapshot.id)
                         addToTemplate.show(fragmentManager!!, "")
                     }
+
+                    shareOptionTextView.setOnClickListener {
+                        FirebaseDynamicLinks
+                            .getInstance()
+                            .createDynamicLink()
+                            .setLink(Uri.parse("https://dailymaps.h1n.ru/tasks/$taskId"))
+                            .setDomainUriPrefix("https://dailymaps.page.link")
+                            .setAndroidParameters(
+                                DynamicLink
+                                    .AndroidParameters
+                                    .Builder("com.x3noku.dailymaps")
+                                    .build()
+                            )
+                            .buildShortDynamicLink()
+                            .addOnSuccessListener {
+                                val dynamicLinkUri = it.shortLink.toString()
+                                val i = Intent(Intent.ACTION_SEND)
+                                i.type = "text/plain"
+                                i.putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    dynamicLinkUri
+                                )
+                                startActivity(Intent.createChooser(i, "Share via"))
+                            }
+                            .addOnFailureListener {
+                                Log.e("TaskList", it.toString(), it)
+                            }
+                    }
+
                     editOptionTextView.setOnClickListener {
                         bottomSheetDialog.dismiss()
-                        val addTask = AddTask(taskId, bottomSheetDialog)
+                        val addTask = AddTask(taskId)
                         addTask.show(activity!!.supportFragmentManager, "AddTask")
                     }
+
                     deleteOptionTextView.setOnClickListener {
                         bottomSheetDialog.dismiss()
                         Snackbar
@@ -102,6 +137,7 @@ class TaskList : Fragment() {
                 addView(taskView)
             }
         }
+
     }
 
 }

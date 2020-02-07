@@ -18,20 +18,20 @@ class DeleteSnackbarCallback( val documentId: String ) : Snackbar.Callback() {
         firestore = FirebaseFirestore.getInstance()
         firebaseAuth = FirebaseAuth.getInstance()
         currentUser = firebaseAuth.currentUser!!
+
+        firestore
+            .collection("users")
+            .document(currentUser.uid)
+            .update("taskIds", FieldValue.arrayRemove(documentId) )
     }
 
     override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
         super.onDismissed(transientBottomBar, event)
 
-        if( event == DISMISS_EVENT_TIMEOUT ) {
+        if( event == DISMISS_EVENT_ACTION )
             firestore
-                .collection("tasks")
-                .document(documentId)
-                .delete()
-                .addOnSuccessListener {
-                    val userDocumentReference = firestore.collection("users").document(currentUser.uid)
-                    userDocumentReference.update("taskIds", FieldValue.arrayRemove(documentId))
-                }
-        }
+                .collection("users")
+                .document(currentUser.uid)
+                .update("taskIds", FieldValue.arrayUnion(documentId) )
     }
 }

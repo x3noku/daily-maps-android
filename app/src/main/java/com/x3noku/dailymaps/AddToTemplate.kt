@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 
-class AddToTemplate(val currentUserId: String, val editableTaskId: String) : DialogFragment() {
+class AddToTemplate(private val currentUserId: String, private val editableTaskId: String) : DialogFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -25,15 +27,29 @@ class AddToTemplate(val currentUserId: String, val editableTaskId: String) : Dia
 
             for(templateId in userInfo.templateIds) {
                 val templateDocumentReference = firestore.collection(getString(R.string.firestore_templates_collection)).document(templateId)
-                templateDocumentReference.get().addOnSuccessListener {
-                    // ToDo: DRAW TEMPLATE CARD
+                templateDocumentReference.get().addOnSuccessListener { documentSnapshot ->
+                    val template = Template(documentSnapshot)
+
+                    val templateView = layoutInflater.inflate(R.layout.template_layout, null)
+                    templateView.findViewById<TextView>(R.id.template_primary_textview).text = template.text
+                    templateView.findViewById<TextView>(R.id.template_secondary_textview).text = "${template.taskIds.size} заданий"
+
+                    templateView.setOnClickListener {
+                        templateDocumentReference
+                            .update("taskIds", FieldValue.arrayUnion(editableTaskId) )
+                            .addOnSuccessListener {
+                                dismiss()
+                            }
+                    }
+
+                    rootView.findViewById<LinearLayout>(R.id.tempalte_list_linearlayout).addView(templateView)
                 }
             }
         }
 
         rootView.findViewById<TextView>(R.id.template_create_new_textview).setOnClickListener {
             dismiss()
-            val createTemplate = CreateTemplate()
+            val createTemplate = CreateTemplate(currentUserId, editableTaskId)
             createTemplate.show(fragmentManager!!, "")
         }
         rootView.findViewById<TextView>(R.id.template_cancel_textview).setOnClickListener {

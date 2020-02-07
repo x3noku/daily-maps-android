@@ -3,10 +3,9 @@ package com.x3noku.dailymaps
 import android.Manifest
 import android.app.AlertDialog
 import android.app.TimePickerDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.PackageManager
-import android.location.LocationManager
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,6 +21,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentTransaction
 import com.github.zawadz88.materialpopupmenu.popupMenu
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
@@ -30,7 +30,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -48,7 +47,7 @@ class AddTask() : DialogFragment() {
         this.previousSelectedItemId = previousSelectedItemId
     }
 
-    constructor(idOfEditableFile: String, bottomSheetDialog: BottomSheetDialog) : this() {
+    constructor(idOfEditableFile: String) : this() {
         this.idOfEditableFile = idOfEditableFile
     }
 
@@ -71,61 +70,80 @@ class AddTask() : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         val rootView = inflater.inflate(R.layout.fragment_add_task, container, false)
+        initLayout(rootView)
+        return rootView
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+
+        val mapFragment = fragmentManager!!.findFragmentById(R.id.map) as SupportMapFragment
+        val fragmentTransaction: FragmentTransaction = activity!!.supportFragmentManager.beginTransaction()
+        fragmentTransaction.remove(mapFragment)
+        fragmentTransaction.commit()
+
+        previousSelectedItemId?.let {
+            val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)
+            bottomNavigationView?.selectedItemId = it
+        }
+    }
+
+    private fun initLayout(rootView: View) {
         val firestore = FirebaseFirestore.getInstance()
         val firebaseAuth = FirebaseAuth.getInstance()
         val currentUser = firebaseAuth.currentUser
         var task = Task()
 
-        run {
-            val toolbar = rootView.findViewById<Toolbar>(R.id.add_task_toolbar)
-            val startTimeInputTextView = rootView.findViewById<TextView>(R.id.add_task_start_time_input)
-            val durationInputTextView = rootView.findViewById<TextView>(R.id.add_task_duration_input)
-            val priorityInputTextView = rootView.findViewById<TextView>(R.id.add_task_priority_input)
-            val textInputEditText = rootView.findViewById<EditText>(R.id.add_task_text_input)
-            val saveTaskImageButton = rootView.findViewById<ImageButton>(R.id.add_task_toolbar_action_image_button)
-            lateinit var googleMap: GoogleMap
-            var marker: Marker? = null
+        val toolbar = rootView.findViewById<Toolbar>(R.id.add_task_toolbar)
+        val startTimeInputTextView = rootView.findViewById<TextView>(R.id.add_task_start_time_input)
+        val durationInputTextView = rootView.findViewById<TextView>(R.id.add_task_duration_input)
+        val priorityInputTextView = rootView.findViewById<TextView>(R.id.add_task_priority_input)
+        val textInputEditText = rootView.findViewById<EditText>(R.id.add_task_text_input)
+        val saveTaskImageButton = rootView.findViewById<ImageButton>(R.id.add_task_toolbar_action_image_button)
+        lateinit var googleMap: GoogleMap
+        var marker: Marker? = null
 
-            val mapFragment = fragmentManager!!.findFragmentById(R.id.map) as SupportMapFragment
-            mapFragment.getMapAsync { gMap ->
-                googleMap = gMap
-                googleMap.isMyLocationEnabled = true
-                try {
-                    val locationManager = context!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                    val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                    location?.let {
-                        val userLocation = LatLng(location.latitude, location.longitude)
-                        val camPos = CameraPosition.Builder()
-                            .target(userLocation)
-                            .zoom(12.2f)
-                            .build()
-                        val camUpdate = CameraUpdateFactory.newCameraPosition(camPos)
-                        googleMap.moveCamera(camUpdate)
+        toolbar.setNavigationOnClickListener {
+            dismiss()
+        }
+
+        val mapFragment = fragmentManager!!.findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync { gMap ->
+            googleMap = gMap
+            googleMap.isMyLocationEnabled = true
+            try {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity!!)
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location : Location? ->
+                        location?.let {
+                            val userLocation = LatLng(location.latitude, location.longitude)
+                            val camPos = CameraPosition.Builder()
+                                .target(userLocation)
+                                .zoom(12.2f)
+                                .build()
+                            val camUpdate = CameraUpdateFactory.newCameraPosition(camPos)
+                            googleMap.moveCamera(camUpdate)
+                            }
                     }
-
-                }
-                catch (e: SecurityException) {
-                    Log.w(TAG, "onMapReady: UserInfo Rejected Location Request");
-                }
-
-                googleMap.setOnMapClickListener { latLng ->
-                    marker?.remove()
-                    marker = googleMap.addMarker(MarkerOptions().position(latLng))
-                    task.coords = latLng
-                }
+            }
+            catch (e: SecurityException) {
+                Log.w(TAG, "onMapReady: UserInfo Rejected Location Request");
             }
 
-            idOfEditableFile?.let { idOfEditableFile ->
-                val editableFileDocumentReference = firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(idOfEditableFile)
-                editableFileDocumentReference.get().addOnSuccessListener { documentSnapshot ->
-                    task = Task(documentSnapshot)
-                    textInputEditText.setText(task.text)
-                    run {
-                        val hours = task.startTime.toHours()
-                        val minutes = task.startTime.toMinutes()
-                        startTimeInputTextView.text = "$hours:${if (minutes < 10) "0$minutes" else "$minutes"}"
-                    }
-                    run {
+            googleMap.setOnMapClickListener { latLng ->
+                marker?.remove()
+                marker = googleMap.addMarker(MarkerOptions().position(latLng))
+                task.coords = latLng
+            }
+        }
+
+        idOfEditableFile?.let { idOfEditableFile ->
+            val editableFileDocumentReference = firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(idOfEditableFile)
+            editableFileDocumentReference.get().addOnSuccessListener { documentSnapshot ->
+                task = Task(documentSnapshot)
+                textInputEditText.setText(task.text)
+                startTimeInputTextView.text = task.startTime.toDigitalView()
+                run {
                         val minutes = task.duration.toMinutes()
                         val hours = task.duration.toHours()
 
@@ -152,7 +170,7 @@ class AddTask() : DialogFragment() {
 
                         durationInputTextView.text =  "$hoursString$minutesString"
                     }
-                    run {
+                run {
                         when(task.priority) {
                             0 -> {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_max_priority)
@@ -176,7 +194,7 @@ class AddTask() : DialogFragment() {
                             }
                         }
                     }
-                    task.coords?.let { latLng ->
+                task.coords?.let { latLng ->
                         val camPos = CameraPosition.Builder()
                             .target(latLng)
                             .zoom(12.2f)
@@ -187,41 +205,37 @@ class AddTask() : DialogFragment() {
                         marker = googleMap.addMarker(MarkerOptions().position(latLng))
 
                     }
-                }
             }
+        }
 
-            toolbar.setNavigationOnClickListener {
-                dismiss()
-            }
+        startTimeInputTextView.setOnClickListener {
+            val timePickerDialog = TimePickerDialog(
+                activity,
+                {_, hours, minutes ->
+                    task.startTime = hours*60 + minutes
+                    startTimeInputTextView.text = task.startTime.toDigitalView()
+                },
+                task.startTime.toHours(),
+                task.startTime.toMinutes(),
+                true
+            )
+            timePickerDialog.show()
+            timePickerDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+            timePickerDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+        }
 
-            startTimeInputTextView.setOnClickListener {
-                val timePickerDialog = TimePickerDialog(
-                    activity,
-                    {_, hours, minutes ->
-                        task.startTime = hours*60 + minutes
-                        startTimeInputTextView.text = "$hours:${if (minutes < 10) "0$minutes" else "$minutes"}"
-                    },
-                    task.startTime.toHours(),
-                    task.startTime.toMinutes(),
-                    true
-                )
-                timePickerDialog.show()
-                timePickerDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
-                timePickerDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
-            }
+        durationInputTextView.setOnClickListener {
+            val hmsPickerDialog = AlertDialog.Builder(context)
+                .setView(R.layout.hms_picker_layout)
+                .setPositiveButton(android.R.string.ok, null)
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            run {
+                val hmsPickerView = hmsPickerDialog.findViewById<HmsPickerView>(R.id.hms_picker_view)!!
+                hmsPickerView.setHours( task.duration.toHours() )
+                hmsPickerView.setMinutes( task.duration.toMinutes() )
 
-            durationInputTextView.setOnClickListener {
-                val hmsPickerDialog = AlertDialog.Builder(context)
-                    .setView(R.layout.hms_picker_layout)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
-                run {
-                    val hmsPickerView = hmsPickerDialog.findViewById<HmsPickerView>(R.id.hms_picker_view)!!
-                    hmsPickerView.setHours( task.duration.toHours() )
-                    hmsPickerView.setMinutes( task.duration.toMinutes() )
-
-                    hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+                hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
                     hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
                     hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setBackgroundColor( ContextCompat.getColor(context!!, R.color.WHITE) )
                     hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setBackgroundColor( ContextCompat.getColor(context!!, R.color.WHITE) )
@@ -258,7 +272,7 @@ class AddTask() : DialogFragment() {
                 }
             }
 
-                priorityInputTextView.setOnClickListener {
+        priorityInputTextView.setOnClickListener {
                 val popupMenu = popupMenu {
                     section {
                         item {
@@ -316,29 +330,26 @@ class AddTask() : DialogFragment() {
                 popupMenu.show(context!!, it)
             }
 
-            textInputEditText.addTextChangedListener {
+        textInputEditText.addTextChangedListener {
                 task.text = it.toString().replace("\\s+".toRegex(), " ")
             }
 
-            saveTaskImageButton.setOnClickListener {
-                if( task.text.isNotBlank() ) {
+        saveTaskImageButton.setOnClickListener {
+                if( task.text.isNotBlank() && currentUser != null ) {
                     idOfEditableFile?.let { idOfEditableFile ->
+                        val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
+                        userDocumentReference.update(
+                            "taskIds",
+                            FieldValue.arrayRemove(idOfEditableFile)
+                        )
                         firestore
                             .collection(resources.getString(R.string.firestore_tasks_collection))
-                            .document(idOfEditableFile)
-                            .delete()
-                            .addOnSuccessListener {
-                                val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser!!.uid)
-                                userDocumentReference.update("taskIds", FieldValue.arrayRemove(idOfEditableFile))
-                                firestore
-                                    .collection(resources.getString(R.string.firestore_tasks_collection))
-                                    .add(task)
-                                    .addOnSuccessListener { documentReference ->
-                                        userDocumentReference
-                                            .update("taskIds", FieldValue.arrayUnion(documentReference.id) )
-                                            .addOnSuccessListener {
-                                                dismiss()
-                                            }
+                            .add(task)
+                            .addOnSuccessListener { documentReference ->
+                                userDocumentReference
+                                    .update("taskIds", FieldValue.arrayUnion(documentReference.id))
+                                    .addOnSuccessListener {
+                                        dismiss()
                                     }
                             }
                     } ?: run {
@@ -356,37 +367,17 @@ class AddTask() : DialogFragment() {
                     }
                 }
             }
-        }
 
-        return rootView
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-
-        val mapFragment = fragmentManager!!.findFragmentById(R.id.map) as SupportMapFragment
-        val fragmentTransaction: FragmentTransaction = activity!!.supportFragmentManager.beginTransaction()
-        fragmentTransaction.remove(mapFragment)
-        fragmentTransaction.commit()
-
-        previousSelectedItemId?.let {
-            val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)
-            bottomNavigationView?.selectedItemId = it
-        }
     }
 
     private fun checkLocationPermission() {
-        while(context
-            != null
-            &&
-            ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), My_Permissions_Request_Location)
+        while(
+            context != null &&
+            ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_COARSE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), My_Permissions_Request_Location)
         }
     }
-
-    private fun Int.toHours(): Int = this/60
-
-    private fun Int.toMinutes(): Int = this%60
 
 }
