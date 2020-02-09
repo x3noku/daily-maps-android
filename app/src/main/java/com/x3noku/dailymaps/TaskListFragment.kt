@@ -20,7 +20,7 @@ import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FirebaseFirestore
 
-class TaskList : Fragment() {
+class TaskListFragment : Fragment() {
 
     private val TAG = "TaskList"
 
@@ -83,7 +83,7 @@ class TaskList : Fragment() {
 
                     addToTemplateOptionTextView.setOnClickListener {
                         bottomSheetDialog.dismiss()
-                        val addToTemplate = AddToTemplate(userId, documentSnapshot.id)
+                        val addToTemplate = AddToTemplateDialogFragment(userId, documentSnapshot.id)
                         addToTemplate.show(fragmentManager!!, "")
                     }
 
@@ -117,7 +117,7 @@ class TaskList : Fragment() {
 
                     editOptionTextView.setOnClickListener {
                         bottomSheetDialog.dismiss()
-                        val addTask = AddTask(taskId)
+                        val addTask = AddTaskDialogFragment(taskId)
                         addTask.show(activity!!.supportFragmentManager, "AddTask")
                     }
 

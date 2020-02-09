@@ -1,0 +1,93 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="0dp"
+    android:background="@color/colorBackground"
+    android:orientation="vertical">
+
+    <!--
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorBackground"
+        app:elevation="0dp">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/template_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorBackground"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:theme="@style/AppTheme"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:navigationIcon="@drawable/ic_arrow_back_grey_24dp"
+            app:popupTheme="@style/AppTheme">
+
+            <TextView
+                android:id="@+id/template_toolbar_title_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/roboto_medium"
+                android:text="@string/template_toolbar_title"
+                android:textColor="@color/BLACK"
+                android:textSize="@dimen/template_toolbar_title_text_size" />
+
+        </androidx.appcompat.widget.Toolbar>
+
+
+    </com.google.android.material.appbar.AppBarLayout>
+    -->
+
+    <com.google.android.material.appbar.CollapsingToolbarLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:contentScrim="?attr/colorPrimary"
+        app:expandedTitleGravity="top"
+        app:expandedTitleMarginStart="8dp"
+        app:expandedTitleMarginTop="8dp"
+        app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_collapseMode="parallax"
+            app:layout_collapseParallaxMultiplier="0.5"
+            app:srcCompat="@drawable/common_google_signin_btn_text_dark_focused" />
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/AppBar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:layout_collapseMode="pin"
+            android:background="@color/colorBackground"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:theme="@style/AppTheme"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:navigationIcon="@drawable/ic_arrow_back_grey_24dp"
+            app:popupTheme="@style/AppTheme">
+
+            <TextView
+                android:id="@+id/template_toolbar_title_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/roboto_medium"
+                android:text="@string/template_toolbar_title"
+                android:textColor="@color/BLACK"
+                android:textSize="@dimen/template_toolbar_title_text_size" />
+
+        </androidx.appcompat.widget.Toolbar>
+
+
+    </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+</LinearLayout>

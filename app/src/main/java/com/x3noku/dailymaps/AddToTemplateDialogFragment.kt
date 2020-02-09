@@ -11,7 +11,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 
-class AddToTemplate(private val currentUserId: String, private val editableTaskId: String) : DialogFragment() {
+class AddToTemplateDialogFragment(private val currentUserId: String, private val editableTaskId: String) : DialogFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,7 +49,7 @@ class AddToTemplate(private val currentUserId: String, private val editableTaskI
 
         rootView.findViewById<TextView>(R.id.template_create_new_textview).setOnClickListener {
             dismiss()
-            val createTemplate = CreateTemplate(currentUserId, editableTaskId)
+            val createTemplate = CreateTemplateDialogFragment(currentUserId, editableTaskId)
             createTemplate.show(fragmentManager!!, "")
         }
         rootView.findViewById<TextView>(R.id.template_cancel_textview).setOnClickListener {

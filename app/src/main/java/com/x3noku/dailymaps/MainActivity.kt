@@ -12,8 +12,8 @@ class MainActivity : AppCompatActivity() {
 
     private val TAG = "MainActivity"
 
-    private var taskListFragment = TaskList()
-    private var profileFragment = Profile()
+    private var taskListFragment = TaskListFragment()
+    private var profileFragment = ProfileFragment()
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
             val id = it.pathSegments.last()
 
             if(type == "tasks") {
-                val addTask = AddTask(id)
+                val addTask = AddTaskDialogFragment(id)
                 addTask.show(supportFragmentManager, "AddTask")
             }
         }
@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.bottom_navigation_add_task_item -> {
-                    val addTask = AddTask( bottomNavigationView.selectedItemId )
+                    val addTask = AddTaskDialogFragment( bottomNavigationView.selectedItemId )
                     addTask.show(supportFragmentManager, "AddTask")
 
                     true

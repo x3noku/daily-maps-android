@@ -4,6 +4,7 @@
     <!-- Page Titles -->
     <dimen name="task_list_toolbar_title_text_size">30sp</dimen>
     <dimen name="add_task_toolbar_title_text_size">18sp</dimen>
+    <dimen name="template_toolbar_title_text_size">30sp</dimen>
 
     <!-- Add Task Fragment -->
     <dimen name="add_task_start_time_title_text_size">14sp</dimen>

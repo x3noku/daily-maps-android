@@ -5,6 +5,7 @@
     <string name="task_list_toolbar_title">ЗАДАЧИ</string>
     <string name="add_task_toolbar_title">ДОБАВЛЕНИЕ ЗАДАНИЯ</string>
     <string name="profile_toolbar_title">ПРОФИЛЬ</string>
+    <string name="template_toolbar_title">ШАБЛОН</string>
 
     <!-- Add Task Fragment -->
     <string name="add_task_start_time_title">Время начала</string>

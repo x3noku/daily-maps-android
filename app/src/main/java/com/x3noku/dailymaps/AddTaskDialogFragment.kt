@@ -35,7 +35,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import xyz.aprildown.hmspickerview.HmsPickerView
 
-class AddTask() : DialogFragment() {
+class AddTaskDialogFragment() : DialogFragment() {
 
     private val TAG = "AddTask"
     private val My_Permissions_Request_Location = 89

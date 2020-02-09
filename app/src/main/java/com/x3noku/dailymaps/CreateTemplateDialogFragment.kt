@@ -11,7 +11,7 @@ import androidx.fragment.app.DialogFragment
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
-class CreateTemplate(private val currentUserId: String, private val editableTaskId: String) :  DialogFragment() {
+class CreateTemplateDialogFragment(private val currentUserId: String, private val editableTaskId: String) :  DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
