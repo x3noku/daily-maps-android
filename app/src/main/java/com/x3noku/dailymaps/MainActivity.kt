@@ -29,9 +29,14 @@ class MainActivity : AppCompatActivity() {
             val type = it.pathSegments[it.pathSegments.lastIndex-1]
             val id = it.pathSegments.last()
 
-            if(type == "tasks") {
-                val addTask = AddTaskDialogFragment(id)
-                addTask.show(supportFragmentManager, "AddTask")
+            when(type) {
+                "tasks" ->
+                    AddTaskDialogFragment(id)
+                        .show(supportFragmentManager, "AddTask")
+                "templates" ->
+                    TemplateDialogFragment(id, TemplateDialogFragment.SHARED)
+                        .show(supportFragmentManager, "Template")
+
             }
         }
 

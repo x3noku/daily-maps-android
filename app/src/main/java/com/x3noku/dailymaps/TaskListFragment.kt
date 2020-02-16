@@ -18,6 +18,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 class TaskListFragment : Fragment() {
@@ -123,21 +124,28 @@ class TaskListFragment : Fragment() {
 
                     deleteOptionTextView.setOnClickListener {
                         bottomSheetDialog.dismiss()
+                        firestore
+                            .collection("users")
+                            .document(userId)
+                            .update("taskIds", FieldValue.arrayRemove(taskId) )
+
                         Snackbar
                             .make(rootView, "Задание будет удалено!", Snackbar.LENGTH_LONG)
-                            .setAction("Отмена", ({}))
+                            .setAction("Отмена", ({
+                                firestore
+                                    .collection("users")
+                                    .document(userId)
+                                    .update("taskIds", FieldValue.arrayUnion(taskId) )
+                            }))
                             .setActionTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
-                            .addCallback( DeleteSnackbarCallback(taskId) )
                             .show()
                     }
 
                     bottomSheetDialog.show()
                 }
-
                 addView(taskView)
             }
         }
-
     }
 
 }

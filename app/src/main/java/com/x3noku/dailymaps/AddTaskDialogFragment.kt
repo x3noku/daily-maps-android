@@ -36,12 +36,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import xyz.aprildown.hmspickerview.HmsPickerView
 
 class AddTaskDialogFragment() : DialogFragment() {
-
-    private val TAG = "AddTask"
-    private val My_Permissions_Request_Location = 89
+    companion object {
+        private const val TAG = "AddTask"
+        private const val My_Permissions_Request_Location = 89
+    }
 
     private var previousSelectedItemId: Int? = null
     private var idOfEditableFile: String? = null
+    private var idOfTemplate: String? = null
 
     constructor(previousSelectedItemId: Int) : this() {
         this.previousSelectedItemId = previousSelectedItemId
@@ -49,6 +51,11 @@ class AddTaskDialogFragment() : DialogFragment() {
 
     constructor(idOfEditableFile: String) : this() {
         this.idOfEditableFile = idOfEditableFile
+    }
+
+    constructor(idOfEditableFile: String, idOfTemplate: String) : this() {
+        this.idOfEditableFile = idOfEditableFile
+        this.idOfTemplate = idOfTemplate
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -337,21 +344,40 @@ class AddTaskDialogFragment() : DialogFragment() {
         saveTaskImageButton.setOnClickListener {
                 if( task.text.isNotBlank() && currentUser != null ) {
                     idOfEditableFile?.let { idOfEditableFile ->
-                        val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
-                        userDocumentReference.update(
-                            "taskIds",
-                            FieldValue.arrayRemove(idOfEditableFile)
-                        )
-                        firestore
-                            .collection(resources.getString(R.string.firestore_tasks_collection))
-                            .add(task)
-                            .addOnSuccessListener { documentReference ->
-                                userDocumentReference
-                                    .update("taskIds", FieldValue.arrayUnion(documentReference.id))
-                                    .addOnSuccessListener {
-                                        dismiss()
-                                    }
-                            }
+                        idOfTemplate?.let {
+                            val templateDocumentReference =
+                                firestore.collection(getString(R.string.firestore_templates_collection)).document(it)
+                            templateDocumentReference.update(
+                                "taskIds",
+                                FieldValue.arrayRemove(idOfEditableFile)
+                            )
+                            firestore
+                                .collection(resources.getString(R.string.firestore_templates_collection))
+                                .add(task)
+                                .addOnSuccessListener { documentReference ->
+                                    templateDocumentReference
+                                        .update("taskIds", FieldValue.arrayUnion(documentReference.id))
+                                        .addOnSuccessListener {
+                                            dismiss()
+                                        }
+                                }
+                        } ?: run {
+                            val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
+                            userDocumentReference.update(
+                                "taskIds",
+                                FieldValue.arrayRemove(idOfEditableFile)
+                            )
+                            firestore
+                                .collection(resources.getString(R.string.firestore_tasks_collection))
+                                .add(task)
+                                .addOnSuccessListener { documentReference ->
+                                    userDocumentReference
+                                        .update("taskIds", FieldValue.arrayUnion(documentReference.id))
+                                        .addOnSuccessListener {
+                                            dismiss()
+                                        }
+                                }
+                        }
                     } ?: run {
                         val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser!!.uid)
                         firestore

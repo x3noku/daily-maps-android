@@ -1,93 +1,74 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_margin="0dp"
     android:background="@color/colorBackground"
-    android:orientation="vertical">
+    tools:context=".ProfileFragment">
 
-    <!--
-    <com.google.android.material.appbar.AppBarLayout
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/template_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorBackground"
-        app:elevation="0dp">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/template_toolbar"
+        android:theme="@style/AppTheme"
+        app:contentInsetStartWithNavigation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="@drawable/ic_arrow_back_grey_24dp"
+        app:popupTheme="@style/AppTheme">
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/colorBackground"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:theme="@style/AppTheme"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:navigationIcon="@drawable/ic_arrow_back_grey_24dp"
-            app:popupTheme="@style/AppTheme">
+            android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/template_toolbar_title_text_view"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:fontFamily="@font/roboto_medium"
-                android:text="@string/template_toolbar_title"
+                android:padding="8dp"
+                android:text="Россия Священная Наша Держава? Hjccbz k.,bvfz yfif cnhfyf"
                 android:textColor="@color/BLACK"
-                android:textSize="@dimen/template_toolbar_title_text_size" />
+                android:textSize="22sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/profile_toolbar_action_image_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        </androidx.appcompat.widget.Toolbar>
+            <ImageButton
+                android:id="@+id/template_toolbar_action_image_button"
+                android:layout_width="?attr/actionBarSize"
+                android:layout_height="?attr/actionBarSize"
+                android:layout_gravity="end"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="16dp"
+                android:scaleType="fitCenter"
+                android:tint="#A3A3A3"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_more_vert_grey_24dp" />
 
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.appcompat.widget.Toolbar>
 
-    </com.google.android.material.appbar.AppBarLayout>
-    -->
-
-    <com.google.android.material.appbar.CollapsingToolbarLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:contentScrim="?attr/colorPrimary"
-        app:expandedTitleGravity="top"
-        app:expandedTitleMarginStart="8dp"
-        app:expandedTitleMarginTop="8dp"
-        app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/template_toolbar" >
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:layout_collapseMode="parallax"
-            app:layout_collapseParallaxMultiplier="0.5"
-            app:srcCompat="@drawable/common_google_signin_btn_text_dark_focused" />
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/AppBar"
+        <LinearLayout
+            android:id="@+id/template_task_list_linear_layout"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:layout_collapseMode="pin"
-            android:background="@color/colorBackground"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:theme="@style/AppTheme"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:navigationIcon="@drawable/ic_arrow_back_grey_24dp"
-            app:popupTheme="@style/AppTheme">
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
 
-            <TextView
-                android:id="@+id/template_toolbar_title_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:fontFamily="@font/roboto_medium"
-                android:text="@string/template_toolbar_title"
-                android:textColor="@color/BLACK"
-                android:textSize="@dimen/template_toolbar_title_text_size" />
+    </ScrollView>
 
-        </androidx.appcompat.widget.Toolbar>
-
-
-    </com.google.android.material.appbar.CollapsingToolbarLayout>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

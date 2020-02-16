@@ -3,6 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
     android:gravity="center"
     android:orientation="horizontal"
     android:padding="@dimen/template_padding">
@@ -40,7 +43,7 @@
     </LinearLayout>
 
     <ImageButton
-        android:id="@+id/imageView2"
+        android:id="@+id/template_secondary_action_imagebutton"
         android:layout_width="@dimen/template_secondary_button_size"
         android:layout_height="@dimen/template_secondary_button_size"
         android:layout_marginStart="@dimen/template_elements_margin"
