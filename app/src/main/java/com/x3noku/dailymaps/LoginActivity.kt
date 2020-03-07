@@ -114,29 +114,29 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
 
         firebaseAuth
             .signInWithCredential( authCredential )
-            .addOnCompleteListener { task ->
-                if( task.isSuccessful ) {
-                    val firestore = FirebaseFirestore.getInstance()
+            .addOnSuccessListener {
+                val firestore = FirebaseFirestore.getInstance()
 
-                    val currentUser = firebaseAuth.currentUser
-                    if( currentUser != null ) {
-                        val currentUserDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
-                        currentUserDocumentReference.get().addOnSuccessListener { documentSnapshot ->
-                            if( documentSnapshot != null ) {
-                                // There isn't any document for user, so let's create it
-                                val currentUserId = currentUser.uid
-                                val currentUserName = if(account.displayName != null) account.displayName!! else "User"
+                val currentUser = firebaseAuth.currentUser
+                if( currentUser != null ) {
+                    val currentUserDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
+                    currentUserDocumentReference.get()
+                        .addOnFailureListener {
+                        val currentUserId = currentUser.uid
+                        val currentUserName =
+                            if (account.displayName != null) account.displayName!! else "User"
 
-                                firestore
-                                    .collection(getString(R.string.firestore_users_collection))
-                                    .document(currentUserId)
-                                    .set( UserInfo(currentUserName) )
-                                    .addOnCompleteListener {
-                                        updateUI(currentUser)
-                                    }
+                        firestore
+                            .collection(getString(R.string.firestore_users_collection))
+                            .document(currentUserId)
+                            .set(UserInfo(currentUserName))
+                            .addOnCompleteListener {
+                                updateUI(currentUser)
                             }
-                        }
                     }
+                        .addOnSuccessListener {
+                            updateUI(currentUser)
+                        }
                 }
             }
             .addOnFailureListener { e ->
@@ -161,10 +161,9 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
 
     private fun isEmailValid(email: String): Boolean =  android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 
-    private fun updateUI( currentUser: FirebaseUser? ) {
-        if( currentUser != null ) {
+    private fun updateUI( currentUser: FirebaseUser? ) =
+        currentUser?.let {
             startActivity( Intent(baseContext, MainActivity::class.java) )
         }
-    }
 
 }

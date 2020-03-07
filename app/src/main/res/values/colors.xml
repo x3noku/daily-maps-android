@@ -26,4 +26,6 @@
     <color name="addTaskLowPriority">#DCEDC1</color>
     <color name="addTaskMinPriority">#A8E6CF</color>
 
+    <color name="black_overlay">#66000000</color>
+
 </resources>

@@ -6,6 +6,8 @@
     <string name="add_task_toolbar_title">ДОБАВЛЕНИЕ ЗАДАНИЯ</string>
     <string name="profile_toolbar_title">ПРОФИЛЬ</string>
     <string name="template_toolbar_title">ШАБЛОН</string>
+    <string name="settings_toolbar_title">НАСТРОЙКИ</string>
+    <string name="route_toolbar_title"> МАРШРУТ</string>
 
     <!-- Add Task Fragment -->
     <string name="add_task_start_time_title">Время начала</string>
@@ -42,5 +44,9 @@
     <string name="firestore_templates_collection">templates</string>
 
     <string name="GOOGLE_API_KEY">AIzaSyA2r1XJCQJf6xLdbm3GeFsWaUtnA8sSwO0</string>
+
+    <string name="title_activity_route">RouteActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 
 </resources>

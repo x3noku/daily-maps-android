@@ -7,9 +7,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -20,6 +20,8 @@ import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.utils.doAsync
+import com.x3noku.dailymaps.utils.toDigitalView
 
 class TaskListFragment : Fragment() {
 
@@ -40,10 +42,21 @@ class TaskListFragment : Fragment() {
                 }
                 if( snapshot != null && snapshot.exists() ) {
                     val userInfo = UserInfo(snapshot)
-                    val taskListLinearLayout = rootView.findViewById<LinearLayout>(R.id.task_list_linear_layout)
+                    val taskListLinearLayout =
+                        rootView.findViewById<LinearLayout>(R.id.task_list_linear_layout)
 
-                    taskListLinearLayout.buildTaskCards( userInfo.taskIds, currentUser.uid )
-                    Log.d(TAG, "$userInfo")
+                    taskListLinearLayout.removeAllViews()
+                    doAsync(
+                        handler = {
+                            taskListLinearLayout
+                                .buildTaskCards(userInfo.taskIds, currentUser.uid)
+                        },
+                        postAction = {
+                            rootView
+                                .findViewById<ProgressBar>(R.id.progressBar)
+                                .visibility = View.GONE
+                        }
+                    )
                 }
             }
         } ?: startActivity( Intent(context, LoginActivity::class.java) )
@@ -53,14 +66,14 @@ class TaskListFragment : Fragment() {
 
     private fun LinearLayout.buildTaskCards(taskIdList: List<String>, userId: String) {
         val firestore = FirebaseFirestore.getInstance()
-        this.removeAllViews()
 
         for( taskId in taskIdList ) {
             firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(taskId).get().addOnSuccessListener { documentSnapshot ->
                 val task = Task(documentSnapshot)
                 val taskView = LayoutInflater.from(context).inflate(R.layout.task_layout, this, false)
 
-                val taskViewCheckBox = taskView.findViewById<CheckBox>(R.id.task_checkbox)
+                // ToDo: Add Logic To Checkbox
+                //val taskViewCheckBox = taskView.findViewById<CheckBox>(R.id.task_checkbox)
                 val taskViewPrimaryTextView = taskView.findViewById<TextView>(R.id.task_text_primary)
                 val taskViewSecondaryTextView = taskView.findViewById<TextView>(R.id.task_text_secondary)
                 val taskViewImageButton = taskView.findViewById<ImageButton>(R.id.task_image_button)

@@ -33,6 +33,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.utils.toDigitalView
+import com.x3noku.dailymaps.utils.toHours
+import com.x3noku.dailymaps.utils.toMinutes
+import com.x3noku.dailymaps.utils.toTextView
 import xyz.aprildown.hmspickerview.HmsPickerView
 
 class AddTaskDialogFragment() : DialogFragment() {
@@ -251,30 +255,7 @@ class AddTaskDialogFragment() : DialogFragment() {
                         val duration: Int = hmsPickerView.getHours()*60 + hmsPickerView.getMinutes()
                         task.duration = duration
 
-                        val minutes = duration.toMinutes()
-                        val hours = duration.toHours()
-
-                        val hoursString = when(hours) {
-                            0 -> ""
-                            in 11..19 -> "$hours часов "
-                            else -> when (hours%10) {
-                                1 -> "$hours час "
-                                in 2..4 -> "$hours часа "
-                                in 5..9 -> "$hours часов "
-                                else -> "$hours часов "
-                            }
-                        }
-                        val minutesString = when(minutes) {
-                            0 -> if( hoursString.isNotBlank() ) "" else "$minutes минут"
-                            in 11..19 -> "$minutes минут"
-                            else -> when (minutes%10) {
-                                1 -> "$minutes минута"
-                                in 2..4 -> "$minutes минуты"
-                                in 5..9 -> "$minutes минут"
-                                else -> "$minutes минут"
-                            }
-                        }
-                        durationInputTextView.text =  "$hoursString$minutesString"
+                        durationInputTextView.text = task.duration.toTextView()
                     }
                 }
             }

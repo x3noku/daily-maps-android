@@ -18,6 +18,8 @@ import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.utils.doAsync
+import com.x3noku.dailymaps.utils.toDigitalView
 
 class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : DialogFragment(), PopupMenu.OnMenuItemClickListener {
 
@@ -28,6 +30,7 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
         private const val TAG = "TemplateDialogFragment"
         const val OWN: Byte = 0
         const val SHARED: Byte = 1
+        private var thereIsNoWaypoints: Boolean = true
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +68,34 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                     .text = template.text
                 val templateTaskListLinearLayout =
                     rootView.findViewById<LinearLayout>(R.id.template_task_list_linear_layout)
-                templateTaskListLinearLayout.buildTaskCards( template.taskIds, template.ownerId )
+
+                templateTaskListLinearLayout.removeAllViews()
+                doAsync(
+                    handler = {
+                        templateTaskListLinearLayout.buildTaskCards(
+                            template.taskIds,
+                            template.ownerId
+                        )
+                    },
+                    postAction = {
+                        if (thereIsNoWaypoints) {
+                            rootView
+                                .findViewById<Button>(R.id.template_build_route_button)
+                                .visibility = View.INVISIBLE
+                            Toast
+                                .makeText(context, "GONE", Toast.LENGTH_SHORT)
+                                .show()
+                        } else {
+                            rootView
+                                .findViewById<Button>(R.id.template_build_route_button)
+                                .visibility = View.VISIBLE
+                            Toast
+                                .makeText(context, "VISIBLE", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                )
+
             }
         }
 
@@ -96,12 +126,18 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                 dismiss()
             }
 
+        rootView.findViewById<Button>(R.id.template_build_route_button)
+            .setOnClickListener {
+                val intent = Intent(context, RouteActivity::class.java)
+                intent.putExtra("templateId", templateId)
+                startActivity(intent)
+            }
+
         return rootView
     }
 
     private fun LinearLayout.buildTaskCards(taskIdList: List<String>, userId: String) {
         val firestore = FirebaseFirestore.getInstance()
-        this.removeAllViews()
 
         for( taskId in taskIdList ) {
             firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(taskId).get().addOnSuccessListener { documentSnapshot ->
@@ -119,6 +155,9 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                 taskViewImageButton.setOnClickListener( createBottomSheetListeners(taskId, templateId, userId) )
 
                 addView(taskView)
+
+                if( task.coords != null )
+                    thereIsNoWaypoints = false
             }
         }
     }
@@ -174,7 +213,7 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                 }
                 editOptionTextView.setOnClickListener {
                     bottomSheetDialog.dismiss()
-                    val addTask = AddTaskDialogFragment(taskId)
+                    val addTask = AddTaskDialogFragment(taskId, templateId)
                     addTask.show(activity!!.supportFragmentManager, "AddTask")
                 }
                 deleteOptionTextView.setOnClickListener {
@@ -338,4 +377,5 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
         }
         return false
     }
+
 }

@@ -21,7 +21,7 @@
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/template_elements_margin"
         android:layout_marginEnd="@dimen/template_elements_margin"
         android:layout_weight="9"

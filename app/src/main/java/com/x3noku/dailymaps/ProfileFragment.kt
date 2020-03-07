@@ -158,6 +158,12 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        rootview
+            .findViewById<ImageButton>(R.id.profile_toolbar_action_image_button)
+            .setOnClickListener {
+                startActivity( Intent(context, SettingsActivity::class.java) )
+            }
+
         return rootview
     }
 }
