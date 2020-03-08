@@ -22,9 +22,11 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.CircleOptions
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -40,8 +42,9 @@ import com.x3noku.dailymaps.utils.*
 import com.google.android.gms.maps.model.LatLng as MapsLatLng
 import com.google.maps.model.LatLng as DirectionsLatLng
 
+// ToDo: RENAME FUNCTIONS AND REORGANIZE IT HIERARCHY
 
-class RouteActivity : AppCompatActivity() {
+class RouteActivity : AppCompatActivity(), OnMapReadyCallback {
 
     companion object {
         const val TAG = "RouteActivity"
@@ -83,32 +86,38 @@ class RouteActivity : AppCompatActivity() {
                 decodedPath.forEach {
                     newDecodedPath.add(it.toMapsLatLng())
                 }
-                val polyline =
-                    googleMap.addPolyline(PolylineOptions().addAll(newDecodedPath))
+
+                googleMap
+                    .addPolyline(
+                        PolylineOptions().addAll(newDecodedPath)
+                    )
+                    .color = ContextCompat.getColor(this, R.color.BLUE)
             }
         }
     }
 
-    private fun drawCircle(center: MapsLatLng, radius: Double = 50.0) {
+    private fun Task.drawPoint() {
         Handler(Looper.getMainLooper()).post {
-            val circle =
-                googleMap.addCircle(
-                    CircleOptions()
-                        .center(center)
-                        .radius(radius)
-                )
+            googleMap.addMarker(
+                MarkerOptions()
+                    .position(this.coords!!)
+                    .title(this.text)
+            )
         }
     }
 
     private fun buildRoute(userLocation: DirectionsLatLng) {
         Log.d(TAG, "buildRoute: function was called")
 
-        fun calculateTask(taskList: List<Task>?) {
+        fun calculateRoutes(taskList: List<Task>?) {
             Log.d(TAG, "calculateTask: function was called")
             Log.d(TAG, "TaskList: $taskList")
 
             taskList?.let { _ ->
+                Log.e(TAG, "${taskList.split()}")
+
                 for( (index, task) in taskList.withIndex() ) {
+                    Log.e(TAG, "${task.text} building a route")
                     DirectionsApiRequest(mGeoApiContext)
                         .alternatives(false)
                         .mode(TravelMode.TRANSIT)
@@ -129,9 +138,10 @@ class RouteActivity : AppCompatActivity() {
                                 Log.e(TAG, "calculateTask: onFailure: ${e.toString()}")
                             }
                         })
-                    drawCircle(task.coords!!)
+                    task.drawPoint()
                 }
             }
+
         }
 
         fun getTaskList(attempt: Int = 0) {
@@ -149,9 +159,18 @@ class RouteActivity : AppCompatActivity() {
                                     val task = Task(taskSnapshot)
                                     task.coords?.let { _ ->
                                         taskList.add(task)
+
+                                        Log.e(TAG, "\"${task.text}\" cooridnates " +
+                                                "is ${task.coords}" +
+                                                ", so let's add it: ${taskList} \n")
+
+
                                     }
-                                    if(index == template.taskIds.size-1)
-                                        calculateTask( taskList.sortedBy { it.startTime } )
+                                }
+                                .addOnCompleteListener {
+                                    if(index == template.taskIds.size-1) {
+                                        calculateRoutes( taskList.sortedBy { it.startTime } )
+                                    }
                                 }
                         }
                     }
@@ -167,7 +186,6 @@ class RouteActivity : AppCompatActivity() {
                         Toast.LENGTH_LONG
                     )
                     .show()
-                calculateTask(null)
             }
         }
 
@@ -190,6 +208,7 @@ class RouteActivity : AppCompatActivity() {
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync { gMap ->
             googleMap = gMap
+            googleMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
             checkForUserLocation()
         }
         mGeoApiContext = GeoApiContext
@@ -332,6 +351,13 @@ class RouteActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onMapReady(p0: GoogleMap?) {
+        val success =
+            googleMap.setMapStyle(
+                MapStyleOptions(getString(R.string.map_style_json))
+            )
     }
 
 }

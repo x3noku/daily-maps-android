@@ -18,6 +18,7 @@
     <color name="WHITE">#FFFFFF</color>
     <color name="BLACK">#000000</color>
     <color name="GREY">#B2B2B2</color>
+    <color name="BLUE">#629DF5</color>
 
     <!-- Priority Colors -->
     <color name="addTaskMaxPriority">#FF8B94</color>
