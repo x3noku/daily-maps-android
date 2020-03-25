@@ -3,3 +3,5 @@ package com.x3noku.dailymaps.utils
 const val PERMISSIONS_REQUEST_ENABLE_GPS = 9002
 const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 9003
 const val ERROR_DIALOG_REQUEST = 9004
+
+const val ZOOM_LEVEL = 12.2f

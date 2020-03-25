@@ -22,11 +22,8 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -38,13 +35,12 @@ import com.google.maps.internal.PolylineEncoding
 import com.google.maps.model.DirectionsResult
 import com.google.maps.model.DirectionsRoute
 import com.google.maps.model.TravelMode
+import com.shashank.sony.fancytoastlib.FancyToast
 import com.x3noku.dailymaps.utils.*
 import com.google.android.gms.maps.model.LatLng as MapsLatLng
 import com.google.maps.model.LatLng as DirectionsLatLng
 
-// ToDo: RENAME FUNCTIONS AND REORGANIZE IT HIERARCHY
-
-class RouteActivity : AppCompatActivity(), OnMapReadyCallback {
+class RouteActivity : AppCompatActivity() {
 
     companion object {
         const val TAG = "RouteActivity"
@@ -96,100 +92,111 @@ class RouteActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun Task.drawPoint() {
-        Handler(Looper.getMainLooper()).post {
-            googleMap.addMarker(
-                MarkerOptions()
-                    .position(this.coords!!)
-                    .title(this.text)
-            )
+    private fun buildRoute(userLocation: DirectionsLatLng) {
+        val taskList: MutableList<Task> = mutableListOf()
+        var snapshotsReceived = 0
+
+        getTemplate(templateId)
+            .addOnSuccessListener { templateSnapshot ->
+                val template = Template(templateSnapshot)
+                for( taskId in template.taskIds ) {
+                    getTask(taskId)
+                        .addOnSuccessListener { taskSnapshot ->
+                            val task = Task(taskSnapshot)
+                            task.coords?.let { _ ->
+                                taskList.add(task)
+                            }
+
+                            if(++snapshotsReceived == template.taskIds.size)
+                                calculateRoute( userLocation, taskList.sortedBy { it.startTime } )
+                        }
+                }
+            }
+    }
+
+    private fun calculateRoute(userLocation: DirectionsLatLng, taskList: List<Task>) {
+        val markedTaskList: MutableList<MarkedTask?> = MutableList(taskList.size) {null}
+
+        for( (index, task) in taskList.withIndex() ) {
+            DirectionsApiRequest(mGeoApiContext)
+                .alternatives(false)
+                .mode(TravelMode.TRANSIT)
+                .origin(
+                    if(index>0)
+                        taskList[index-1].coords?.toDirectionsLatLng()
+                    else
+                        userLocation
+                )
+                .destination( task.coords?.toDirectionsLatLng() )
+                .setCallback(object : PendingResult.Callback<DirectionsResult> {
+                    override fun onResult(result: DirectionsResult?) {
+                        result?.let { dResult ->
+                            markedTaskList.set(index, MarkedTask(task, dResult.countRouteTime() ))
+                            drawPolylines(dResult)
+
+                            if( !markedTaskList.contains(null) ) {
+                                optimizeRoute(markedTaskList.toList() )
+                            }
+                            else {
+                                Log.w(TAG, "markedTaskList, $markedTaskList")
+                            }
+                        }
+                    }
+
+                    override fun onFailure(e: Throwable?) {
+                        Log.e(TAG, "155: $e", e)
+                    }
+                })
         }
     }
 
-    private fun buildRoute(userLocation: DirectionsLatLng) {
-        Log.d(TAG, "buildRoute: function was called")
+    private fun optimizeRoute(markedTaskList: List<MarkedTask?>) {
+        val markedTaskFragmentList = markedTaskList.splitToFragments()
+        markedTaskFragmentList.forEach { it.optimizeFragment() }
 
-        fun calculateRoutes(taskList: List<Task>?) {
-            Log.d(TAG, "calculateTask: function was called")
-            Log.d(TAG, "TaskList: $taskList")
-
-            taskList?.let { _ ->
-                Log.e(TAG, "${taskList.split()}")
-
-                for( (index, task) in taskList.withIndex() ) {
-                    Log.e(TAG, "${task.text} building a route")
-                    DirectionsApiRequest(mGeoApiContext)
-                        .alternatives(false)
-                        .mode(TravelMode.TRANSIT)
-                        .origin(
-                            if(index>0)
-                                taskList[index-1].coords?.toDirectionsLatLng()
-                            else
-                                userLocation
-                        )
-                        .destination( task.coords?.toDirectionsLatLng() )
-                        .setCallback(object : PendingResult.Callback<DirectionsResult> {
-                            override fun onResult(result: DirectionsResult?) {
-                                result?.let {
-                                    drawPolylines(result)
-                                }
-                            }
-                            override fun onFailure(e: Throwable?) {
-                                Log.e(TAG, "calculateTask: onFailure: ${e.toString()}")
-                            }
-                        })
-                    task.drawPoint()
-                }
-            }
-
-        }
-
-        fun getTaskList(attempt: Int = 0) {
-            Log.d(TAG, "getTaskList: function was called")
-            if(attempt < 3) {
-                val taskList: MutableList<Task> = mutableListOf()
-
-                getTemplate(templateId)
-                    .addOnSuccessListener { templateSnapshot ->
-                        val template = Template(templateSnapshot)
-
-                        for( (index, taskId) in template.taskIds.withIndex() ) {
-                            getTask(taskId)
-                                .addOnSuccessListener { taskSnapshot ->
-                                    val task = Task(taskSnapshot)
-                                    task.coords?.let { _ ->
-                                        taskList.add(task)
-
-                                        Log.e(TAG, "\"${task.text}\" cooridnates " +
-                                                "is ${task.coords}" +
-                                                ", so let's add it: ${taskList} \n")
-
-
-                                    }
-                                }
-                                .addOnCompleteListener {
-                                    if(index == template.taskIds.size-1) {
-                                        calculateRoutes( taskList.sortedBy { it.startTime } )
-                                    }
-                                }
+        doAsync(
+            handler = {
+                markedTaskFragmentList.forEach { it.optimizeFragment() }
+            },
+            postAction = {
+                doAsync(
+                    handler = {
+                        for(markedTaskFragment in markedTaskFragmentList) {
+                            markedTaskFragment.taskList.forEach { it.drawPoint(googleMap) }
+                            markedTaskFragment.limiterLeft?.drawPoint(googleMap)
+                            markedTaskFragment.limiterRight?.drawPoint(googleMap)
                         }
+                    },
+                    postAction = {
+                        val firstTask = markedTaskFragmentList.first().taskList.first()
+                        val departureTime =
+                            (firstTask.startTime - firstTask.routeTime).toDigitalView()
+
+                        FancyToast
+                            .makeText(
+                                this,
+                                "Маршрут успешно оптимизирован! Выйдите в $departureTime, " +
+                                        "чтобы успеть выполнить все задания!",
+                                FancyToast.LENGTH_LONG,
+                                FancyToast.SUCCESS,
+                                false
+                            ).show()
                     }
-                    .addOnFailureListener {
-                        getTaskList(attempt+1)
-                    }
+                )
             }
-            else {
-                Toast
-                    .makeText(
-                        this,
-                        "Не удалось получить шаблон, попробуйте вернуться попозже.",
-                        Toast.LENGTH_LONG
-                    )
-                    .show()
-            }
+        )
+
+    }
+
+    private fun DirectionsResult.countRouteTime(): Int {
+        val route = this.routes[0]
+        var routeTime = 0
+
+        for(leg in route.legs) {
+            routeTime += (leg.duration.inSeconds / 60).toInt()
         }
 
-        getTaskList()
+        return routeTime
     }
 
     private fun getTemplate(templateId: String) =
@@ -229,24 +236,31 @@ class RouteActivity : AppCompatActivity(), OnMapReadyCallback {
                             MapsLatLng(nonNullLocation.latitude, nonNullLocation.longitude)
                         val camPos = CameraPosition.Builder()
                             .target(userLocation)
-                            .zoom(12.2f)
+                            .zoom(ZOOM_LEVEL)
                             .build()
                         val camUpdate = CameraUpdateFactory.newCameraPosition(camPos)
                         googleMap.moveCamera(camUpdate)
 
                         buildRoute( userLocation.toDirectionsLatLng() )
+                    } ?: run {
+                        FancyToast.makeText(
+                            this,
+                            "Не удалось определить местоположение!",
+                            FancyToast.LENGTH_LONG,
+                            FancyToast.ERROR,
+                            false
+                        ).show()
                     }
                 }
                 .addOnFailureListener {
                     buildAlertMessageNoGps()
                 }
-            Toast.makeText(this, "CHECK FOR USER LOCATION", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun checkMapServices(): Boolean {
-        if (isServicesOK()) {
-            if (isMapsEnabled()) {
+        if(isServicesOK()) {
+            if(isMapsEnabled()) {
                 return true
             }
         }
@@ -351,13 +365,6 @@ class RouteActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
         }
-    }
-
-    override fun onMapReady(p0: GoogleMap?) {
-        val success =
-            googleMap.setMapStyle(
-                MapStyleOptions(getString(R.string.map_style_json))
-            )
     }
 
 }

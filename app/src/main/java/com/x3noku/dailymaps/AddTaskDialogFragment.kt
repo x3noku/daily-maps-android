@@ -380,10 +380,10 @@ class AddTaskDialogFragment() : DialogFragment() {
     private fun checkLocationPermission() {
         while(
             context != null &&
-            ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_COARSE_LOCATION)
+            ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), My_Permissions_Request_Location)
+            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), My_Permissions_Request_Location)
         }
     }
 

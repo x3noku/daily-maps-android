@@ -18,16 +18,18 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
-import com.pranavpandey.android.dynamic.toasts.DynamicToast
+import com.shashank.sony.fancytoastlib.FancyToast
 
 class LoginActivity : AppCompatActivity(),  View.OnClickListener {
 
-    private val TAG = "LoginActivity"
-    private val RC_SIGN_IN = 9001
+    companion object {
+        const val TAG = "LoginActivity"
+        const val RC_SIGN_IN = 9001
 
-    private lateinit var rootView: View
-    private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var firestore: FirebaseFirestore
+        private lateinit var rootView: View
+        private lateinit var firebaseAuth: FirebaseAuth
+        private lateinit var firestore: FirebaseFirestore
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +57,15 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
         updateUI(currentUser)
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        val currentUser = firebaseAuth.currentUser
+        updateUI(currentUser)
+    }
+
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -68,9 +79,14 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                 }
             }
             catch (e: ApiException) {
-                DynamicToast
-                    .makeError(baseContext, "Не удалось авторизоваться: $e")
-                    .show()
+                FancyToast
+                    .makeText(
+                        baseContext,
+                        "Не удалось авторизоваться: $e",
+                        FancyToast.LENGTH_LONG,
+                        FancyToast.ERROR,
+                        false
+                    ).show()
                 Log.e(TAG, "Google sign in failed", e)
             }
         }
@@ -97,8 +113,6 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
         }
     }
 
-
-
     private fun chooseGoogleSignInAccount() {
         val googleSignInOptions = GoogleSignInOptions.Builder( GoogleSignInOptions.DEFAULT_SIGN_IN )
             .requestIdToken( getString(R.string.default_web_client_id) )
@@ -119,30 +133,46 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
 
                 val currentUser = firebaseAuth.currentUser
                 if( currentUser != null ) {
-                    val currentUserDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
+                    val currentUserDocumentReference =
+                        firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
                     currentUserDocumentReference.get()
-                        .addOnFailureListener {
-                        val currentUserId = currentUser.uid
-                        val currentUserName =
-                            if (account.displayName != null) account.displayName!! else "User"
-
-                        firestore
-                            .collection(getString(R.string.firestore_users_collection))
-                            .document(currentUserId)
-                            .set(UserInfo(currentUserName))
-                            .addOnCompleteListener {
-                                updateUI(currentUser)
-                            }
-                    }
                         .addOnSuccessListener {
-                            updateUI(currentUser)
+                            if( !it.exists() ) {
+                                val currentUserId = currentUser.uid
+                                Log.w(TAG, currentUserId)
+                                val currentUserName =
+                                    if (account.displayName != null) account.displayName!! else "User"
+
+                                firestore
+                                    .collection(getString(R.string.firestore_users_collection))
+                                    .document(currentUserId)
+                                    .set(UserInfo(currentUserName))
+                                    .addOnSuccessListener {
+                                        updateUI(currentUser)
+                                    }
+                                    .addOnFailureListener {
+                                        FancyToast
+                                            .makeText(
+                                                this,
+                                                "Can not create user's document",
+                                                FancyToast.LENGTH_LONG,
+                                                FancyToast.ERROR,
+                                                false
+                                            ).show()
+                                    }
+                            }
                         }
                 }
             }
             .addOnFailureListener { e ->
-                DynamicToast
-                    .makeError(baseContext, "Авторизация не удалась: $e")
-                    .show()
+                FancyToast
+                    .makeText(
+                        baseContext,
+                        "Не удалось авторизоваться: $e",
+                        FancyToast.LENGTH_LONG,
+                        FancyToast.ERROR,
+                        false
+                    ).show()
             }
     }
 
@@ -154,7 +184,14 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                     updateUI(currentUser)
                 }
                 else {
-                    DynamicToast.makeError(baseContext, "Не удалось авторизироваться!")
+                    FancyToast
+                        .makeText(
+                            baseContext,
+                            "Не удалось авторизоваться!",
+                            FancyToast.LENGTH_LONG,
+                            FancyToast.ERROR,
+                            false
+                        ).show()
                 }
             }
     }

@@ -10,10 +10,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
-    private val TAG = "MainActivity"
+    companion object {
+        const val TAG = "MainActivity"
 
-    private var taskListFragment = TaskListFragment()
-    private var profileFragment = ProfileFragment()
+        private var taskListFragment = TaskListFragment()
+        private var profileFragment = ProfileFragment()
+    }
+
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -44,47 +47,51 @@ class MainActivity : AppCompatActivity() {
         fragmentTransaction.add(R.id.main_frame_layout, taskListFragment)
         fragmentTransaction.commit()
 
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->
-            val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
-            when(menuItem.itemId) {
-                R.id.bottom_navigation_home_item -> {
-                    transaction.replace(R.id.main_frame_layout, taskListFragment)
-                    transaction.commit()
-                    true
-                }
-                R.id.bottom_navigation_add_task_item -> {
-                    val addTask = AddTaskDialogFragment( bottomNavigationView.selectedItemId )
-                    addTask.show(supportFragmentManager, "AddTask")
+        initBottomNavigation()
+    }
 
-                    true
-                }
-                R.id.bottom_navigation_profile_item -> {
-                    transaction.replace(R.id.main_frame_layout, profileFragment)
-                    transaction.commit()
-                    true
-                }
-                else -> false
+
+
+    private fun initBottomNavigation() {
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+
+        bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->
+            val fragmentTransaction: FragmentTransaction = supportFragmentManager.beginTransaction()
+            when(menuItem.itemId) {
+                R.id.bottom_navigation_home_item ->
+                    fragmentTransaction.replace(R.id.main_frame_layout, taskListFragment)
+
+                R.id.bottom_navigation_add_task_item ->
+                    AddTaskDialogFragment( bottomNavigationView.selectedItemId )
+                        .show(supportFragmentManager, "AddTask")
+
+                R.id.bottom_navigation_profile_item ->
+                    fragmentTransaction.replace(R.id.main_frame_layout, profileFragment)
+
             }
+            fragmentTransaction.commit()
+            true
         }
         bottomNavigationView.setOnNavigationItemReselectedListener { menuItem ->
+            val fragmentTransaction = supportFragmentManager.beginTransaction()
             when(menuItem.itemId) {
                 R.id.bottom_navigation_home_item -> {
-                    val transaction = supportFragmentManager.beginTransaction()
                     if (Build.VERSION.SDK_INT >= 26) {
-                        transaction.setReorderingAllowed(false)
+                        fragmentTransaction.setReorderingAllowed(false)
                     }
-                    transaction.detach(taskListFragment).attach(taskListFragment).commit()
+                    fragmentTransaction.detach(taskListFragment).attach(taskListFragment)
                 }
                 R.id.bottom_navigation_profile_item -> {
-                    val transaction = supportFragmentManager.beginTransaction()
                     if (Build.VERSION.SDK_INT >= 26) {
-                        transaction.setReorderingAllowed(false)
+                        fragmentTransaction.setReorderingAllowed(false)
                     }
-                    transaction.detach(profileFragment).attach(profileFragment).commit()
+                    fragmentTransaction.detach(profileFragment).attach(profileFragment)
                 }
             }
+            fragmentTransaction.commit()
         }
     }
+
+
 
 }

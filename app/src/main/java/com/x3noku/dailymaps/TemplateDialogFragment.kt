@@ -18,7 +18,6 @@ import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.x3noku.dailymaps.utils.doAsync
 import com.x3noku.dailymaps.utils.toDigitalView
 
 class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : DialogFragment(), PopupMenu.OnMenuItemClickListener {
@@ -70,32 +69,8 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                     rootView.findViewById<LinearLayout>(R.id.template_task_list_linear_layout)
 
                 templateTaskListLinearLayout.removeAllViews()
-                doAsync(
-                    handler = {
-                        templateTaskListLinearLayout.buildTaskCards(
-                            template.taskIds,
-                            template.ownerId
-                        )
-                    },
-                    postAction = {
-                        if (thereIsNoWaypoints) {
-                            rootView
-                                .findViewById<Button>(R.id.template_build_route_button)
-                                .visibility = View.INVISIBLE
-                            Toast
-                                .makeText(context, "GONE", Toast.LENGTH_SHORT)
-                                .show()
-                        } else {
-                            rootView
-                                .findViewById<Button>(R.id.template_build_route_button)
-                                .visibility = View.VISIBLE
-                            Toast
-                                .makeText(context, "VISIBLE", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                    }
-                )
 
+                templateTaskListLinearLayout.buildTaskCards(template.taskIds, template.ownerId)
             }
         }
 
@@ -138,28 +113,49 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
 
     private fun LinearLayout.buildTaskCards(taskIdList: List<String>, userId: String) {
         val firestore = FirebaseFirestore.getInstance()
+        val taskList = mutableListOf<Task>()
 
-        for( taskId in taskIdList ) {
-            firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(taskId).get().addOnSuccessListener { documentSnapshot ->
-                val task = Task(documentSnapshot)
-                val taskView = LayoutInflater.from(context).inflate(R.layout.task_layout, this, false)
+        for(taskId in taskIdList) {
+            firestore
+                .collection(getString(R.string.firestore_tasks_collection))
+                .document(taskId)
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    taskList.add(Task(documentSnapshot))
+                    if(taskList.size == taskIdList.size) {
+                        val amountOfMarkedTask = taskList.count { it.coords != null }
+                        if( amountOfMarkedTask > 0 )
+                            rootView.findViewById<Button>(R.id.template_build_route_button).visibility = View.VISIBLE
+                        else
+                            rootView.findViewById<Button>(R.id.template_build_route_button).visibility = View.INVISIBLE
 
-                val taskViewCheckBox = taskView.findViewById<CheckBox>(R.id.task_checkbox)
-                val taskViewPrimaryTextView = taskView.findViewById<TextView>(R.id.task_text_primary)
-                val taskViewSecondaryTextView = taskView.findViewById<TextView>(R.id.task_text_secondary)
-                val taskViewImageButton = taskView.findViewById<ImageButton>(R.id.task_image_button)
+                        for(task in taskList.sortedBy { it.startTime }) {
+                            val taskView = LayoutInflater.from(context).inflate(R.layout.task_layout, this, false)
 
-                taskViewPrimaryTextView.text = task.text
-                taskViewSecondaryTextView.text = task.startTime.toDigitalView()
+                            val taskViewCheckBox = taskView.findViewById<CheckBox>(R.id.task_checkbox)
+                            val taskViewPrimaryTextView = taskView.findViewById<TextView>(R.id.task_text_primary)
+                            val taskViewSecondaryTextView = taskView.findViewById<TextView>(R.id.task_text_secondary)
+                            val taskViewImageButton = taskView.findViewById<ImageButton>(R.id.task_image_button)
 
-                taskViewImageButton.setOnClickListener( createBottomSheetListeners(taskId, templateId, userId) )
+                            taskViewCheckBox.isChecked = task.completed
+                            taskViewPrimaryTextView.text = task.text
+                            taskViewSecondaryTextView.text = task.startTime.toDigitalView()
+                            taskViewCheckBox.setOnClickListener {
+                                firestore
+                                    .collection(getString(R.string.firestore_tasks_collection))
+                                    .document(task.documentId!!)
+                                    .update("completed", taskViewCheckBox.isChecked)
+                            }
+                            taskViewImageButton.setOnClickListener( createBottomSheetListeners(taskId, templateId, userId) )
 
-                addView(taskView)
-
-                if( task.coords != null )
-                    thereIsNoWaypoints = false
-            }
+                            addView(taskView)
+                        }
+                    }
+                }
         }
+
+        if( taskIdList.isEmpty() )
+            rootView.findViewById<Button>(R.id.template_build_route_button).visibility = View.INVISIBLE
     }
 
     private fun createBottomSheetListeners(taskId: String, templateId: String, userId: String): View.OnClickListener? =
@@ -297,7 +293,6 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
         item?.let {
             when (item.itemId) {
                 R.id.option_share -> {
-                    Toast.makeText(context!!, "fbahbfhsa", Toast.LENGTH_LONG).show()
                     FirebaseDynamicLinks
                         .getInstance()
                         .createDynamicLink()
