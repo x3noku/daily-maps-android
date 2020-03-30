@@ -22,9 +22,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class ProfileFragment : Fragment() {
     companion object {
-        const val TAG = "Profile"
-        private lateinit var rootview: View
+        const val TAG = "ProfileFragment"
     }
+
+    private lateinit var rootview: View
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,15 +44,23 @@ class ProfileFragment : Fragment() {
         val currentUser = firebaseAuth.currentUser
         val firestore = FirebaseFirestore.getInstance()
 
-        currentUser?.let {
+        currentUser?.let { firebaseUser ->
             val userDocumentReference =
                 firestore.collection(getString(R.string.firestore_users_collection))
                     .document(currentUser.uid)
 
             userDocumentReference
                 .get()
-                .addOnSuccessListener {
-                    val userInfo = UserInfo(it)
+                .addOnSuccessListener { documentSnapshot ->
+                    val userInfo = UserInfo(documentSnapshot)
+
+                    rootview
+                        .findViewById<TextView>(R.id.profile_user_name_textview)
+                        .text = userInfo.nickname
+
+                    rootview
+                        .findViewById<TextView>(R.id.profile_user_email_textview)
+                        .text = firebaseUser.email
 
                     for (templateId in userInfo.templateIds) {
                         val templateDocumentReference = FirebaseFirestore.getInstance()
@@ -120,6 +129,10 @@ class ProfileFragment : Fragment() {
                                                     "templateIds",
                                                     FieldValue.arrayRemove(templateId)
                                                 )
+                                            fragmentManager?.beginTransaction()
+                                                ?.detach(this)
+                                                ?.attach(this)
+                                                ?.commit()
 
                                             Snackbar
                                                 .make(
@@ -136,6 +149,10 @@ class ProfileFragment : Fragment() {
                                                             "templateIds",
                                                             FieldValue.arrayUnion(templateId)
                                                         )
+                                                    fragmentManager?.beginTransaction()
+                                                        ?.detach(this)
+                                                        ?.attach(this)
+                                                        ?.commit()
                                                 }))
                                                 .setActionTextColor(
                                                     ContextCompat.getColor(
@@ -154,7 +171,7 @@ class ProfileFragment : Fragment() {
                             }
 
                             templateView.setOnClickListener {
-                                TemplateDialogFragment(templateId).show(fragmentManager!!, "")
+                                TemplateDialogFragment(templateId, this).show(fragmentManager!!, "")
                             }
 
                             rootview
@@ -165,15 +182,11 @@ class ProfileFragment : Fragment() {
                     }
                 }
         }
-        rootview
-            .findViewById<ImageButton>(R.id.profile_toolbar_action_image_button)
-            .setOnClickListener {
-                startActivity(Intent(context, SettingsActivity::class.java))
-            }
+
+        rootview.findViewById<ImageButton>(R.id.profile_toolbar_action_image_button).setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            startActivity( Intent(context, LoginActivity::class.java) )
+        }
     }
 
-
-    override fun onStop() {
-        super.onStop()
-    }
 }

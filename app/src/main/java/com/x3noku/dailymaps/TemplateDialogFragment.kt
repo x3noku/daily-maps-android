@@ -1,5 +1,6 @@
 package com.x3noku.dailymaps
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -14,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FieldValue
@@ -22,15 +24,22 @@ import com.x3noku.dailymaps.utils.toDigitalView
 
 class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : DialogFragment(), PopupMenu.OnMenuItemClickListener {
 
+    private var fragment: ProfileFragment? = null
+
+    constructor(templateId: String, fragment: ProfileFragment) : this(templateId) {
+        this.fragment = fragment
+    }
+
     companion object {
-        private lateinit var rootView: View
-        private lateinit var template: Template
-        private lateinit var currentUserId: String
         private const val TAG = "TemplateDialogFragment"
+
         const val OWN: Byte = 0
         const val SHARED: Byte = 1
-        private var thereIsNoWaypoints: Boolean = true
     }
+
+    private lateinit var rootView: View
+    private lateinit var template: Template
+    private lateinit var currentUserId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +69,7 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
             }
             if( snapshot != null && snapshot.exists() ) {
                 template = Template(snapshot)
-                currentUserId = template.ownerId
+                currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
 
                 rootView
                     .findViewById<TextView>(R.id.template_toolbar_title_text_view)
@@ -70,7 +79,7 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
 
                 templateTaskListLinearLayout.removeAllViews()
 
-                templateTaskListLinearLayout.buildTaskCards(template.taskIds, template.ownerId)
+                templateTaskListLinearLayout.buildTaskCards(template.taskIds)
             }
         }
 
@@ -111,13 +120,13 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
         return rootView
     }
 
-    private fun LinearLayout.buildTaskCards(taskIdList: List<String>, userId: String) {
+    private fun LinearLayout.buildTaskCards(taskIdList: List<String>) {
         val firestore = FirebaseFirestore.getInstance()
         val taskList = mutableListOf<Task>()
 
         for(taskId in taskIdList) {
             firestore
-                .collection(getString(R.string.firestore_tasks_collection))
+                .collection(context.getString(R.string.firestore_tasks_collection))
                 .document(taskId)
                 .get()
                 .addOnSuccessListener { documentSnapshot ->
@@ -146,7 +155,7 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                                     .document(task.documentId!!)
                                     .update("completed", taskViewCheckBox.isChecked)
                             }
-                            taskViewImageButton.setOnClickListener( createBottomSheetListeners(taskId, templateId, userId) )
+                            taskViewImageButton.setOnClickListener( createBottomSheetListeners(task.documentId!!, templateId) )
 
                             addView(taskView)
                         }
@@ -158,16 +167,14 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
             rootView.findViewById<Button>(R.id.template_build_route_button).visibility = View.INVISIBLE
     }
 
-    private fun createBottomSheetListeners(taskId: String, templateId: String, userId: String): View.OnClickListener? =
+    private fun createBottomSheetListeners(taskId: String, templateId: String): View.OnClickListener? =
         when(type) {
             OWN -> View.OnClickListener {
                 val bottomSheetView = LayoutInflater.from(context)
-                    .inflate(R.layout.task_bottom_sheet_layout, null, false)
+                    .inflate(R.layout.task_own_bottom_sheet_layout, null, false)
                 val bottomSheetDialog = BottomSheetDialog(context!!)
                 bottomSheetDialog.setContentView(bottomSheetView)
 
-                val addToTemplateOptionTextView =
-                    bottomSheetView.findViewById<TextView>(R.id.sheet_option_add_to_template)
                 val shareOptionTextView =
                     bottomSheetView.findViewById<TextView>(R.id.sheet_option_share)
                 val editOptionTextView =
@@ -175,11 +182,6 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                 val deleteOptionTextView =
                     bottomSheetView.findViewById<TextView>(R.id.sheet_option_delete)
 
-                addToTemplateOptionTextView.setOnClickListener {
-                    bottomSheetDialog.dismiss()
-                    val addToTemplate = AddToTemplateDialogFragment(userId, taskId)
-                    addToTemplate.show(fragmentManager!!, "")
-                }
                 shareOptionTextView.setOnClickListener {
                     FirebaseDynamicLinks
                         .getInstance()
@@ -242,8 +244,6 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
 
                 val addToFavoriteOptionView =
                     bottomSheetView.findViewById<TextView>(R.id.sheet_option_add_to_favorite)
-                val addToTemplateOptionTextView =
-                    bottomSheetView.findViewById<TextView>(R.id.sheet_option_add_to_template)
                 val shareOptionTextView =
                     bottomSheetView.findViewById<TextView>(R.id.sheet_option_share)
 
@@ -251,11 +251,6 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                     bottomSheetDialog.dismiss()
                     val addTask = AddTaskDialogFragment(taskId)
                     addTask.show(activity!!.supportFragmentManager, "AddTask")
-                }
-                addToTemplateOptionTextView.setOnClickListener {
-                    bottomSheetDialog.dismiss()
-                    val addToTemplate = AddToTemplateDialogFragment(userId, taskId)
-                    addToTemplate.show(fragmentManager!!, "")
                 }
                 shareOptionTextView.setOnClickListener {
                     FirebaseDynamicLinks
@@ -337,7 +332,7 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                                 .update("templateIds", FieldValue.arrayUnion(templateId))
                         }))
                         .setActionTextColor(ContextCompat.getColor(context!!, R.color.colorAccent))
-                        .setCallback(DeleteSnackbarCallback(dialog))
+                        .addCallback(DeleteSnackbarCallback(dialog, fragment!!))
                         .show()
                     return true
                 }
@@ -362,6 +357,9 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                                         .document(currentUserId)
                                         .update("templateIds", FieldValue.arrayUnion(reference.id))
                                         .addOnSuccessListener {
+                                            Toast
+                                                .makeText(context, "Added template ${reference.id} to user ${currentUserId}", Toast.LENGTH_LONG)
+                                                .show()
                                             dismiss()
                                         }
                                 }
@@ -373,4 +371,12 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
         return false
     }
 
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+
+        fragment?.fragmentManager?.beginTransaction()
+            ?.detach(fragment!!)
+            ?.attach(fragment!!)
+            ?.commit()
+    }
 }

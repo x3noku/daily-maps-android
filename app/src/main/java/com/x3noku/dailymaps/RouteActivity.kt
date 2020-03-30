@@ -12,9 +12,12 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import android.view.View
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
@@ -36,6 +39,7 @@ import com.google.maps.model.DirectionsResult
 import com.google.maps.model.DirectionsRoute
 import com.google.maps.model.TravelMode
 import com.shashank.sony.fancytoastlib.FancyToast
+import com.x3noku.dailymaps.classes.TimeLackException
 import com.x3noku.dailymaps.utils.*
 import com.google.android.gms.maps.model.LatLng as MapsLatLng
 import com.google.maps.model.LatLng as DirectionsLatLng
@@ -44,19 +48,31 @@ class RouteActivity : AppCompatActivity() {
 
     companion object {
         const val TAG = "RouteActivity"
-        
-        private lateinit var firestore: FirebaseFirestore
-        private lateinit var user: FirebaseUser
-        private lateinit var templateId: String
-        private lateinit var googleMap: GoogleMap
 
-        private var mLocationPermissionGranted = false
-        private lateinit var mGeoApiContext: GeoApiContext
     }
+
+    private lateinit var firestore: FirebaseFirestore
+    private lateinit var user: FirebaseUser
+    private lateinit var templateId: String
+    private lateinit var googleMap: GoogleMap
+
+    private var mLocationPermissionGranted = false
+    private lateinit var mGeoApiContext: GeoApiContext
+
+    private val changeList = mutableListOf<Pair<MarkedTask?, String?>>()
+    private lateinit var departureTime: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_route)
+
+        findViewById<Toolbar>(R.id.route_toolbar).setNavigationOnClickListener {
+            finish()
+        }
+
+        findViewById<ImageButton>(R.id.route_toolbar_action_image_button).setOnClickListener {
+            showChangeListDialog()
+        }
 
         firestore = FirebaseFirestore.getInstance()
         FirebaseAuth.getInstance().currentUser?.let { firebaseUser ->
@@ -115,7 +131,7 @@ class RouteActivity : AppCompatActivity() {
     }
 
     private fun calculateRoute(userLocation: DirectionsLatLng, taskList: List<Task>) {
-        val markedTaskList: MutableList<MarkedTask?> = MutableList(taskList.size) {null}
+         val markedTaskList: MutableList<MarkedTask?> = MutableList(taskList.size) {null}
 
         for( (index, task) in taskList.withIndex() ) {
             DirectionsApiRequest(mGeoApiContext)
@@ -131,7 +147,7 @@ class RouteActivity : AppCompatActivity() {
                 .setCallback(object : PendingResult.Callback<DirectionsResult> {
                     override fun onResult(result: DirectionsResult?) {
                         result?.let { dResult ->
-                            markedTaskList.set(index, MarkedTask(task, dResult.countRouteTime() ))
+                            markedTaskList[index]  = MarkedTask(task, dResult.countRouteTime() )
                             drawPolylines(dResult)
 
                             if( !markedTaskList.contains(null) ) {
@@ -150,13 +166,47 @@ class RouteActivity : AppCompatActivity() {
         }
     }
 
+    private fun showChangeListDialog() {
+        var message = "Отправление в $departureTime."
+
+        for( changesPair in changeList ) {
+            if( changesPair.first != null && changesPair.second != null ) {
+                message += "\n\nЗадание \"${changesPair.first!!.text}\" было " +
+                            "перенесено с ${changesPair.first!!.startTime.toDigitalView()} " +
+                        "на ${changesPair.second}."
+            }
+        }
+
+        AlertDialog
+            .Builder(this)
+            .setTitle("Информация о маршруте")
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("Ок", ({   _, _ ->  }))
+            .create()
+            .show()
+
+    }
+
     private fun optimizeRoute(markedTaskList: List<MarkedTask?>) {
         val markedTaskFragmentList = markedTaskList.splitToFragments()
-        markedTaskFragmentList.forEach { it.optimizeFragment() }
 
         doAsync(
             handler = {
-                markedTaskFragmentList.forEach { it.optimizeFragment() }
+                try {
+                    markedTaskFragmentList.forEach { if(it.isNotEmpty()) it.optimizeFragment() }
+                }
+                catch (e: TimeLackException) {
+                    /*
+                    val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+                    builder.setMessage("Для нормального функцианирования приложению нужен доступ к GPS. Хотите включить его?")
+                        .setCancelable(false)
+                        .setPositiveButton("Да", ({   _, _ -> finish()   }))
+                    val alert: AlertDialog = builder.create()
+                    alert.show()
+                     */
+                    Log.e(TAG, "${e.message}")
+                }
             },
             postAction = {
                 doAsync(
@@ -168,19 +218,52 @@ class RouteActivity : AppCompatActivity() {
                         }
                     },
                     postAction = {
-                        val firstTask = markedTaskFragmentList.first().taskList.first()
-                        val departureTime =
+                        val firstTask =
+                            if( markedTaskFragmentList.first().isNotEmpty() )
+                                markedTaskFragmentList.first().taskList.first()
+                            else
+                                markedTaskFragmentList.first().limiterRight!!
+
+                        departureTime =
                             (firstTask.startTime - firstTask.routeTime).toDigitalView()
 
+                        var i = 0
+                        markedTaskFragmentList.forEach { fragmentTaskList ->
+
+                            fragmentTaskList.limiterLeft?.let {
+                                changeList.add(Pair(null, null))
+                                i++
+                            }
+                            fragmentTaskList.taskList.forEach { markedTask ->
+                                if( markedTask.startTime != markedTaskList[i]?.startTime ) {
+                                    val changes =
+                                        Pair(
+                                            markedTaskList[i],
+                                            markedTask.startTime.toDigitalView()
+                                        )
+                                    changeList.add(changes)
+                                }
+                                else {
+                                    changeList.add(Pair(null, null))
+                                }
+                                i++
+                            }
+                        }
+
                         FancyToast
-                            .makeText(
-                                this,
-                                "Маршрут успешно оптимизирован! Выйдите в $departureTime, " +
+                            .makeText(this,
+                                "Маршрут успешно оптимизирован! Выйдете в $departureTime, " +
                                         "чтобы успеть выполнить все задания!",
                                 FancyToast.LENGTH_LONG,
                                 FancyToast.SUCCESS,
                                 false
                             ).show()
+
+                        findViewById<ImageButton>(R.id.route_toolbar_action_image_button)
+                            .visibility = View.VISIBLE
+
+                        if( changeList.count{ it.first != null && it.second != null } != markedTaskList.size)
+                            showChangeListDialog()
                     }
                 )
             }

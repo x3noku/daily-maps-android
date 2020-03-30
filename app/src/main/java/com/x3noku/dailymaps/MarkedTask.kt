@@ -16,6 +16,8 @@ class MarkedTask(task: Task, val routeTime: Int) : Task(
     task.completed
 ) {
 
+    constructor(markedTask: MarkedTask) : this(markedTask, markedTask.routeTime)
+
     fun toMarkerTitle(): String {
         val firstPart = if(text.length > 20) "${text.substring(0..20)}..." else text
         val secondPart = startTime.toDigitalView()

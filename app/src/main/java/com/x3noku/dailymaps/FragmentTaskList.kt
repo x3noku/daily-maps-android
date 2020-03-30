@@ -1,6 +1,7 @@
 package com.x3noku.dailymaps
 
 import android.util.Log
+import com.x3noku.dailymaps.classes.TimeLackException
 
 class FragmentTaskList(type: Int) {
 
@@ -61,41 +62,73 @@ class FragmentTaskList(type: Int) {
     private fun movePart(fromIndex: Int = 0, toIndex: Int = this._taskList.size, moveValue: Int, side: Int) {
         val taskListSlice = this._taskList.subList(fromIndex, toIndex)
 
-        for(task in taskListSlice) {
-            when(side) {
-                LEFT -> task.startTime -= moveValue
-                RIGHT -> task.startTime += moveValue
+        when(side) {
+            LEFT -> {
+                for(i in taskListSlice.size-1 downTo 0) {
+                    if(i == taskListSlice.size-1) {
+                        taskListSlice[i].startTime -= moveValue
+                    }
+                    else {
+                        val conflictValue =
+                            (taskListSlice[i].startTime + taskListSlice[i].duration)-
+                                    (taskListSlice[i+1].startTime - taskListSlice[i+1].routeTime)
+
+                        if( conflictValue > 0 ) {
+                            taskListSlice[i].startTime -= conflictValue
+                        }
+                    }
+                }
+            }
+            RIGHT -> {
+                for(i in 0 until taskListSlice.size) {
+                    if(i == 0) {
+                        taskListSlice[i].startTime += moveValue
+                    }
+                    else {
+                        val conflictValue =
+                            (taskListSlice[i-1].startTime + taskListSlice[i-1].duration)-
+                                    (taskListSlice[i].startTime - taskListSlice[i].routeTime)
+
+                        if( conflictValue > 0 ) {
+                            taskListSlice[i].startTime += conflictValue
+                        }
+                    }
+                }
             }
         }
+
     }
 
     private fun resolveConflict(conflictValue: Int, rightBorderIndex: Int) {
-        if( this.type in DELAYED_NONE..DELAYED_RIGHT ) {
-            when {
-                this.findMaxPriority(toIndex = rightBorderIndex) < this.findMaxPriority(fromIndex = rightBorderIndex) -> {
-                    // MOVE LEFT PART ON @conflictValue TO THE LEFT
-                    this.movePart(toIndex = rightBorderIndex, moveValue = conflictValue, side = LEFT)
-                }
-                this.findMaxPriority(toIndex = rightBorderIndex) == this.findMaxPriority(fromIndex = rightBorderIndex) -> {
-                    // MOVE PARTS ON PARTS OF @conflictValue according to numbers of priorities
-
-                    val sumReversed =
-                        1/this.countMaxPriority(toIndex = rightBorderIndex) + 1/this.countMaxPriority(fromIndex = rightBorderIndex)
-
-                    val leftMoveValue = ((1/this.countMaxPriority(toIndex = rightBorderIndex)) / sumReversed) * conflictValue
-                    val rightMoveValue = ((1/this.countMaxPriority(fromIndex= rightBorderIndex)) / sumReversed) * conflictValue
-
-                    this.movePart(toIndex = rightBorderIndex, moveValue = leftMoveValue, side = LEFT)
-                    this.movePart(fromIndex = rightBorderIndex, moveValue = rightMoveValue, side = RIGHT)
-                }
-                this.findMaxPriority(toIndex = rightBorderIndex) < this.findMaxPriority(fromIndex = rightBorderIndex) -> {
-                    // MOVE RIGHT PART ON @conflictValue TO THE RIGHT
-                    this.movePart(fromIndex = rightBorderIndex, moveValue = conflictValue, side = RIGHT)
-                }
+        when {
+            this.findMaxPriority(toIndex = rightBorderIndex) < this.findMaxPriority(fromIndex = rightBorderIndex) -> {
+                // MOVE LEFT PART ON @conflictValue TO THE LEFT
+                this.movePart(toIndex = rightBorderIndex, moveValue = conflictValue, side = LEFT)
             }
-        }
-        else {
-            // ToDo: resolve conflict to delayed both sides fragment
+            this.findMaxPriority(toIndex = rightBorderIndex) == this.findMaxPriority(fromIndex = rightBorderIndex) -> {
+                // MOVE PARTS ON PARTS OF @conflictValue according to numbers of priorities
+
+                val sumReversed =
+                    1 / this.countMaxPriority(toIndex = rightBorderIndex) + 1 / this.countMaxPriority(
+                        fromIndex = rightBorderIndex
+                    )
+
+                val leftMoveValue =
+                    ((1 / this.countMaxPriority(toIndex = rightBorderIndex)) / sumReversed) * conflictValue
+                val rightMoveValue =
+                    ((1 / this.countMaxPriority(fromIndex = rightBorderIndex)) / sumReversed) * conflictValue
+
+                this.movePart(toIndex = rightBorderIndex, moveValue = leftMoveValue, side = LEFT)
+                this.movePart(
+                    fromIndex = rightBorderIndex,
+                    moveValue = rightMoveValue,
+                    side = RIGHT
+                )
+            }
+            this.findMaxPriority(toIndex = rightBorderIndex) < this.findMaxPriority(fromIndex = rightBorderIndex) -> {
+                // MOVE RIGHT PART ON @conflictValue TO THE RIGHT
+                this.movePart(fromIndex = rightBorderIndex, moveValue = conflictValue, side = RIGHT)
+            }
         }
     }
 
@@ -130,25 +163,70 @@ class FragmentTaskList(type: Int) {
         }
     }
 
+    private fun moveAllTasks(leftConflictValue: Int, rightConflictValue: Int) {
+        this._taskList.first().startTime += leftConflictValue
+        for(i in 0 until this._taskList.size-1) {
+            val leftTaskEndTime =
+                this._taskList[i].startTime + this._taskList[i].duration
+            val rightTaskStartTime =
+                this._taskList[i+1].startTime - this._taskList[i+1].routeTime
+            if(leftTaskEndTime > rightTaskStartTime) {
+                val confVal = leftTaskEndTime - rightTaskStartTime
+                this._taskList[i+1].startTime += confVal
+            }
+        }
+
+        this._taskList.last().startTime -= rightConflictValue
+        for(i in this._taskList.size-1 downTo 1) {
+            val rightTaskStartTime =
+                this._taskList[i].startTime - this._taskList[i].routeTime
+            val leftTaskEndTime =
+                this._taskList[i-1].startTime + this._taskList[i-1].duration
+            if(leftTaskEndTime > rightTaskStartTime) {
+                val confVal = leftTaskEndTime - rightTaskStartTime
+                this._taskList[i-1].startTime -= confVal
+            }
+        }
+    }
+
     fun optimizeFragment() {
-        for( (i, task) in this._taskList.withIndex() ) {
-            if( i < this._taskList.size-1 ) {
+        if (this.type == DELAYED_BOTH_SIDES) {
+            val timeAvailable =
+                (limiterRight!!.startTime - limiterRight!!.routeTime) - (limiterLeft!!.startTime + limiterLeft!!.duration)
+
+            var timeNeeded = 0
+            this._taskList.forEach {
+                timeNeeded += it.routeTime + it.duration
+            }
+
+            if (timeAvailable < timeNeeded) {
+                val message = "Невозможно оптимизировать фрагмент маршрута " +
+                        "между заданиями \"${limiterLeft!!.text}\" и \"${limiterRight!!.text}\". " +
+                        "Попробуйте изменить свое расписание."
+                throw TimeLackException(message)
+            }
+        }
+
+        for ((i, task) in this._taskList.withIndex()) {
+            if (i < this._taskList.size - 1) {
                 val leftTaskEndTime = task.startTime + task.duration
-                val rightTaskStartTime = this._taskList[i+1].startTime - this._taskList[i+1].routeTime
-                if( leftTaskEndTime > rightTaskStartTime ) {
+                val rightTaskStartTime =
+                    this._taskList[i + 1].startTime - this._taskList[i + 1].routeTime
+                if (leftTaskEndTime > rightTaskStartTime) {
                     val conflictValue = leftTaskEndTime - rightTaskStartTime
-                    resolveConflict(conflictValue, i+1)
+                    resolveConflict(conflictValue, i + 1)
                 }
             }
         }
-        when(this.type) {
+
+        when (this.type) {
             DELAYED_LEFT -> {
                 val limiterEndTime =
                     limiterLeft!!.startTime + limiterLeft!!.duration
                 val boundaryTaskStartTime =
                     this._taskList.first().startTime - this._taskList.first().routeTime
 
-                if(limiterEndTime > boundaryTaskStartTime) {
+                if (limiterEndTime > boundaryTaskStartTime) {
                     val conflictValue = limiterEndTime - boundaryTaskStartTime
                     moveAllTasks(conflictValue)
                 }
@@ -159,12 +237,37 @@ class FragmentTaskList(type: Int) {
                 val limiterStartTime =
                     limiterRight!!.startTime - limiterRight!!.routeTime
 
-                if(boundaryTaskEndTime > limiterStartTime) {
-                    val conflictValue = boundaryTaskEndTime- limiterStartTime
+                if (boundaryTaskEndTime > limiterStartTime) {
+                    val conflictValue = boundaryTaskEndTime - limiterStartTime
                     moveAllTasks(conflictValue)
                 }
             }
+            DELAYED_BOTH_SIDES -> {
+                val leftLimiterEndTime =
+                    limiterLeft!!.startTime + limiterLeft!!.duration
+                val leftBoundaryTaskStartTime =
+                    this._taskList.first().startTime - this._taskList.first().routeTime
+
+                val rightBoundaryTaskEndTime =
+                    this._taskList.last().startTime + this._taskList.last().duration
+                val rightLimiterStartTime =
+                    limiterRight!!.startTime - limiterRight!!.routeTime
+
+                if (leftLimiterEndTime > leftBoundaryTaskStartTime || rightBoundaryTaskEndTime > rightLimiterStartTime) {
+                    val leftConflictValue = leftLimiterEndTime - leftBoundaryTaskStartTime
+                    val rightConflictValue = rightBoundaryTaskEndTime - rightLimiterStartTime
+                    moveAllTasks(
+                        if(leftConflictValue>=0) leftConflictValue else 0,
+                        if(rightConflictValue>=0) rightConflictValue else 0
+                    )
+                }
+            }
         }
+
+    }
+
+    fun isNotEmpty(): Boolean {
+        return _taskList.isNotEmpty()
     }
 }
 
@@ -176,7 +279,7 @@ fun List<MarkedTask?>.splitToFragments(): ArrayList<FragmentTaskList> {
     for( (index, task) in taskList.withIndex() ) {
         task!!
         if (task.priority > 0) {
-            fragmentTaskList.addTask(task)
+            fragmentTaskList.addTask(MarkedTask(task))
         }
         else {
             when(fragmentTaskList.type) {

@@ -28,7 +28,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/add_task_toolbar"
+            android:id="@+id/route_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorBackground"
@@ -52,12 +52,14 @@
                 android:textSize="@dimen/route_title_text_size" />
 
             <ImageButton
-                android:id="@+id/add_task_toolbar_action_image_button"
+                android:id="@+id/route_toolbar_action_image_button"
                 android:layout_width="?attr/actionBarSize"
                 android:layout_height="?attr/actionBarSize"
                 android:layout_gravity="end"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:srcCompat="@drawable/ic_more_vert_grey_24dp" />
+                android:tint="#A3A3A3"
+                app:srcCompat="@drawable/ic_info_outline_black_24dp"
+                android:visibility="gone"/>
 
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>

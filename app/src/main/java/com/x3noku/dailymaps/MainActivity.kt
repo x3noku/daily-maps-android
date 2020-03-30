@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
 
 
 class MainActivity : AppCompatActivity() {
@@ -21,6 +22,14 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         this.intent = intent
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if( currentUser == null )
+            startActivity( Intent(this, LoginActivity::class.java) )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +58,6 @@ class MainActivity : AppCompatActivity() {
 
         initBottomNavigation()
     }
-
-
 
     private fun initBottomNavigation() {
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
@@ -91,7 +98,5 @@ class MainActivity : AppCompatActivity() {
             fragmentTransaction.commit()
         }
     }
-
-
 
 }
