@@ -188,82 +188,98 @@ class RouteActivity : AppCompatActivity() {
 
     }
 
+    private fun showErrorAlertDialog(errorList: List<TimeLackException>) {
+        var message = ""
+
+        errorList.forEach {
+            message += "${it.message}\n"
+        }
+
+        AlertDialog
+            .Builder(this)
+            .setTitle("Измените свое расписание!")
+            .setMessage(message)
+            .setPositiveButton("Ок", ({ _, _ -> finish() }))
+            .setCancelable(false)
+            .create()
+            .show()
+    }
+
     private fun optimizeRoute(markedTaskList: List<MarkedTask?>) {
         val markedTaskFragmentList = markedTaskList.splitToFragments()
 
+
+        val errorList: MutableList<TimeLackException> = mutableListOf()
         doAsync(
             handler = {
                 try {
                     markedTaskFragmentList.forEach { if(it.isNotEmpty()) it.optimizeFragment() }
                 }
                 catch (e: TimeLackException) {
-                    /*
-                    val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-                    builder.setMessage("Для нормального функцианирования приложению нужен доступ к GPS. Хотите включить его?")
-                        .setCancelable(false)
-                        .setPositiveButton("Да", ({   _, _ -> finish()   }))
-                    val alert: AlertDialog = builder.create()
-                    alert.show()
-                     */
-                    Log.e(TAG, "${e.message}")
+                    errorList.add(e)
                 }
             },
             postAction = {
                 doAsync(
                     handler = {
-                        for(markedTaskFragment in markedTaskFragmentList) {
-                            markedTaskFragment.taskList.forEach { it.drawPoint(googleMap) }
-                            markedTaskFragment.limiterLeft?.drawPoint(googleMap)
-                            markedTaskFragment.limiterRight?.drawPoint(googleMap)
-                        }
+                            for(markedTaskFragment in markedTaskFragmentList) {
+                                markedTaskFragment.taskList.forEach { it.drawPoint(googleMap) }
+                                markedTaskFragment.limiterLeft?.drawPoint(googleMap)
+                                markedTaskFragment.limiterRight?.drawPoint(googleMap)
+                            }
                     },
                     postAction = {
-                        val firstTask =
-                            if( markedTaskFragmentList.first().isNotEmpty() )
-                                markedTaskFragmentList.first().taskList.first()
-                            else
-                                markedTaskFragmentList.first().limiterRight!!
-
-                        departureTime =
-                            (firstTask.startTime - firstTask.routeTime).toDigitalView()
-
-                        var i = 0
-                        markedTaskFragmentList.forEach { fragmentTaskList ->
-
-                            fragmentTaskList.limiterLeft?.let {
-                                changeList.add(Pair(null, null))
-                                i++
-                            }
-                            fragmentTaskList.taskList.forEach { markedTask ->
-                                if( markedTask.startTime != markedTaskList[i]?.startTime ) {
-                                    val changes =
-                                        Pair(
-                                            markedTaskList[i],
-                                            markedTask.startTime.toDigitalView()
-                                        )
-                                    changeList.add(changes)
-                                }
-                                else {
-                                    changeList.add(Pair(null, null))
-                                }
-                                i++
-                            }
+                        if( errorList.isNotEmpty() ) {
+                            showErrorAlertDialog(errorList)
                         }
+                        else {
+                            val firstTask =
+                                if (markedTaskFragmentList.first().isNotEmpty())
+                                    markedTaskFragmentList.first().taskList.first()
+                                else
+                                    markedTaskFragmentList.first().limiterRight!!
 
-                        FancyToast
-                            .makeText(this,
-                                "Маршрут успешно оптимизирован! Выйдете в $departureTime, " +
-                                        "чтобы успеть выполнить все задания!",
-                                FancyToast.LENGTH_LONG,
-                                FancyToast.SUCCESS,
-                                false
-                            ).show()
+                            departureTime =
+                                (firstTask.startTime - firstTask.routeTime).toDigitalView()
 
-                        findViewById<ImageButton>(R.id.route_toolbar_action_image_button)
-                            .visibility = View.VISIBLE
+                            var i = 0
+                            markedTaskFragmentList.forEach { fragmentTaskList ->
 
-                        if( changeList.count{ it.first != null && it.second != null } != markedTaskList.size)
-                            showChangeListDialog()
+                                fragmentTaskList.limiterLeft?.let {
+                                    changeList.add(Pair(null, null))
+                                    i++
+                                }
+                                fragmentTaskList.taskList.forEach { markedTask ->
+                                    if (markedTask.startTime != markedTaskList[i]?.startTime) {
+                                        val changes =
+                                            Pair(
+                                                markedTaskList[i],
+                                                markedTask.startTime.toDigitalView()
+                                            )
+                                        changeList.add(changes)
+                                    } else {
+                                        changeList.add(Pair(null, null))
+                                    }
+                                    i++
+                                }
+                            }
+
+                            FancyToast
+                                .makeText(
+                                    this,
+                                    "Маршрут успешно оптимизирован! Выйдете в $departureTime, " +
+                                            "чтобы успеть выполнить все задания!",
+                                    FancyToast.LENGTH_LONG,
+                                    FancyToast.SUCCESS,
+                                    false
+                                ).show()
+
+                            findViewById<ImageButton>(R.id.route_toolbar_action_image_button)
+                                .visibility = View.VISIBLE
+
+                            if (changeList.count { it.first != null && it.second != null } != markedTaskList.size)
+                                showChangeListDialog()
+                        }
                     }
                 )
             }

@@ -200,9 +200,8 @@ class FragmentTaskList(type: Int) {
             }
 
             if (timeAvailable < timeNeeded) {
-                val message = "Невозможно оптимизировать фрагмент маршрута " +
-                        "между заданиями \"${limiterLeft!!.text}\" и \"${limiterRight!!.text}\". " +
-                        "Попробуйте изменить свое расписание."
+                val message = "Невозможно оптимизировать маршрут " +
+                        "между  \"${limiterLeft!!.text}\" и \"${limiterRight!!.text}\"."
                 throw TimeLackException(message)
             }
         }
