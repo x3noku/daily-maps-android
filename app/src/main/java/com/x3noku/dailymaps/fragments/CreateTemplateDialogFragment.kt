@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.data.Template
 
 class CreateTemplateDialogFragment(private val currentUserId: String, private val editableTaskId: String) :  DialogFragment() {
 
@@ -34,7 +36,11 @@ class CreateTemplateDialogFragment(private val currentUserId: String, private va
             val templateName = rootView.findViewById<EditText>(R.id.template_create_edittext).text.toString()
 
             if( templateName.isNotBlank() ) {
-                val template = Template(templateName, currentUserId, editableTaskId)
+                val template = Template(
+                    templateName,
+                    currentUserId,
+                    editableTaskId
+                )
 
                 val firestore = FirebaseFirestore.getInstance()
                 val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUserId)

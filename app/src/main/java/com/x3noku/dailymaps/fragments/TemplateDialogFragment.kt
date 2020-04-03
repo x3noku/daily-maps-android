@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.fragments
 
 import android.content.DialogInterface
 import android.content.Intent
@@ -20,9 +20,14 @@ import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.activities.RouteActivity
+import com.x3noku.dailymaps.data.DeleteSnackbarCallback
+import com.x3noku.dailymaps.data.Task
+import com.x3noku.dailymaps.data.Template
 import com.x3noku.dailymaps.utils.toDigitalView
 
-class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : DialogFragment(), PopupMenu.OnMenuItemClickListener {
+class TemplateDialogFragment(val templateId: String, val type: Byte = OWN) : DialogFragment(), PopupMenu.OnMenuItemClickListener {
 
     private var fragment: ProfileFragment? = null
 
@@ -44,7 +49,9 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setStyle(STYLE_NORMAL, R.style.FullScreenDialogStyle)
+        setStyle(STYLE_NORMAL,
+            R.style.FullScreenDialogStyle
+        )
 
         val dialogFragment = dialog
         val width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -130,7 +137,11 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                 .document(taskId)
                 .get()
                 .addOnSuccessListener { documentSnapshot ->
-                    taskList.add(Task(documentSnapshot))
+                    taskList.add(
+                        Task(
+                            documentSnapshot
+                        )
+                    )
                     if(taskList.size == taskIdList.size) {
                         val amountOfMarkedTask = taskList.count { it.coords != null }
                         if( amountOfMarkedTask > 0 )
@@ -141,10 +152,18 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                         for(task in taskList.sortedBy { it.startTime }) {
                             val taskView = LayoutInflater.from(context).inflate(R.layout.task_layout, this, false)
 
-                            val taskViewCheckBox = taskView.findViewById<CheckBox>(R.id.task_checkbox)
-                            val taskViewPrimaryTextView = taskView.findViewById<TextView>(R.id.task_text_primary)
-                            val taskViewSecondaryTextView = taskView.findViewById<TextView>(R.id.task_text_secondary)
-                            val taskViewImageButton = taskView.findViewById<ImageButton>(R.id.task_image_button)
+                            val taskViewCheckBox = taskView.findViewById<CheckBox>(
+                                R.id.task_checkbox
+                            )
+                            val taskViewPrimaryTextView = taskView.findViewById<TextView>(
+                                R.id.task_text_primary
+                            )
+                            val taskViewSecondaryTextView = taskView.findViewById<TextView>(
+                                R.id.task_text_secondary
+                            )
+                            val taskViewImageButton = taskView.findViewById<ImageButton>(
+                                R.id.task_image_button
+                            )
 
                             taskViewCheckBox.isChecked = task.completed
                             taskViewPrimaryTextView.text = task.text
@@ -211,7 +230,11 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                 }
                 editOptionTextView.setOnClickListener {
                     bottomSheetDialog.dismiss()
-                    val addTask = AddTaskDialogFragment(taskId, templateId)
+                    val addTask =
+                        AddTaskDialogFragment(
+                            taskId,
+                            templateId
+                        )
                     addTask.show(activity!!.supportFragmentManager, "AddTask")
                 }
                 deleteOptionTextView.setOnClickListener {
@@ -231,7 +254,9 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                                 .document(templateId)
                                 .update("taskIds", FieldValue.arrayUnion(taskId) )
                         }))
-                        .setActionTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+                        .setActionTextColor( ContextCompat.getColor(context!!,
+                            R.color.colorAccent
+                        ) )
                         .show()
                 }
                 bottomSheetDialog.show()
@@ -249,7 +274,10 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
 
                 addToFavoriteOptionView.setOnClickListener {
                     bottomSheetDialog.dismiss()
-                    val addTask = AddTaskDialogFragment(taskId)
+                    val addTask =
+                        AddTaskDialogFragment(
+                            taskId
+                        )
                     addTask.show(activity!!.supportFragmentManager, "AddTask")
                 }
                 shareOptionTextView.setOnClickListener {
@@ -331,8 +359,15 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                                 .document(currentUserId)
                                 .update("templateIds", FieldValue.arrayUnion(templateId))
                         }))
-                        .setActionTextColor(ContextCompat.getColor(context!!, R.color.colorAccent))
-                        .addCallback(DeleteSnackbarCallback(dialog, fragment!!))
+                        .setActionTextColor(ContextCompat.getColor(context!!,
+                            R.color.colorAccent
+                        ))
+                        .addCallback(
+                            DeleteSnackbarCallback(
+                                dialog,
+                                fragment!!
+                            )
+                        )
                         .show()
                     return true
                 }
@@ -343,7 +378,8 @@ class TemplateDialogFragment(val templateId: String, val type: Byte = OWN ) : Di
                         .document(templateId)
                         .get()
                         .addOnSuccessListener {
-                            val template = Template(it)
+                            val template =
+                                Template(it)
                             template.ownerId = currentUserId
 
                             FirebaseFirestore

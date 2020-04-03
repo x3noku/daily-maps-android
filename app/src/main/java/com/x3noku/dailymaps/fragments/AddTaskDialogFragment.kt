@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.fragments
 
 import android.Manifest
 import android.app.AlertDialog
@@ -33,6 +33,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.data.Task
 import com.x3noku.dailymaps.utils.toDigitalView
 import com.x3noku.dailymaps.utils.toHours
 import com.x3noku.dailymaps.utils.toMinutes
@@ -66,7 +68,9 @@ class AddTaskDialogFragment() : DialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setStyle(STYLE_NORMAL, R.style.FullScreenDialogStyle)
+        setStyle(STYLE_NORMAL,
+            R.style.FullScreenDialogStyle
+        )
 
         val dialogFragment = dialog
         val width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -95,7 +99,9 @@ class AddTaskDialogFragment() : DialogFragment() {
         fragmentTransaction.commit()
 
         previousSelectedItemId?.let {
-            val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)
+            val bottomNavigationView = activity?.findViewById<BottomNavigationView>(
+                R.id.bottom_navigation
+            )
             bottomNavigationView?.selectedItemId = it
         }
     }
@@ -150,7 +156,9 @@ class AddTaskDialogFragment() : DialogFragment() {
         }
 
         editableFileId?.let { idOfEditableFile ->
-            val editableFileDocumentReference = firestore.collection(resources.getString(R.string.firestore_tasks_collection)).document(idOfEditableFile)
+            val editableFileDocumentReference = firestore.collection(resources.getString(
+                R.string.firestore_tasks_collection
+            )).document(idOfEditableFile)
             editableFileDocumentReference.get().addOnSuccessListener { documentSnapshot ->
                 task = Task(documentSnapshot)
                 textInputEditText.setText(task.text)
@@ -186,23 +194,33 @@ class AddTaskDialogFragment() : DialogFragment() {
                         when(task.priority) {
                             0 -> {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_max_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMaxPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskMaxPriority
+                                ) )
                             }
                             1 -> {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_high_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskHighPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskHighPriority
+                                ) )
                             }
                             2 -> {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_mid_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMidPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskMidPriority
+                                ) )
                             }
                             3 -> {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_low_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskLowPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskLowPriority
+                                ) )
                             }
                             else -> {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_min_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMinPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskMinPriority
+                                ) )
                             }
                         }
                     }
@@ -232,8 +250,12 @@ class AddTaskDialogFragment() : DialogFragment() {
                 true
             )
             timePickerDialog.show()
-            timePickerDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
-            timePickerDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
+            timePickerDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!,
+                R.color.colorAccent
+            ) )
+            timePickerDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!,
+                R.color.colorAccent
+            ) )
         }
 
         durationInputTextView.setOnClickListener {
@@ -247,10 +269,18 @@ class AddTaskDialogFragment() : DialogFragment() {
                 hmsPickerView.setHours( task.duration.toHours() )
                 hmsPickerView.setMinutes( task.duration.toMinutes() )
 
-                hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
-                    hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!, R.color.colorAccent) )
-                    hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setBackgroundColor( ContextCompat.getColor(context!!, R.color.WHITE) )
-                    hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setBackgroundColor( ContextCompat.getColor(context!!, R.color.WHITE) )
+                hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor( ContextCompat.getColor(context!!,
+                    R.color.colorAccent
+                ) )
+                    hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor( ContextCompat.getColor(context!!,
+                        R.color.colorAccent
+                    ) )
+                    hmsPickerDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setBackgroundColor( ContextCompat.getColor(context!!,
+                        R.color.WHITE
+                    ) )
+                    hmsPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setBackgroundColor( ContextCompat.getColor(context!!,
+                        R.color.WHITE
+                    ) )
 
                     hmsPickerDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(android.R.string.ok)) { _, _ ->
                         val duration: Int = hmsPickerView.getHours()*60 + hmsPickerView.getMinutes()
@@ -266,51 +296,76 @@ class AddTaskDialogFragment() : DialogFragment() {
                     section {
                         item {
                             label = "Макс."
-                            icon = R.drawable.ic_dot_black_24dp
-                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskMaxPriority)
+                            icon =
+                                R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!,
+                                R.color.addTaskMaxPriority
+                            )
                             callback = {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_max_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMaxPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskMaxPriority
+                                ) )
                                 task.priority = 0
                             }
                         }
                         item {
                             label = "Высокий"
-                            icon = R.drawable.ic_dot_black_24dp
-                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskHighPriority)
+                            icon =
+                                R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!,
+                                R.color.addTaskHighPriority
+                            )
                             callback = {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_high_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskHighPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskHighPriority
+                                ) )
                                 task.priority = 1
                             }
                         }
                         item {
                             label = "Средний"
-                            icon = R.drawable.ic_dot_black_24dp
-                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskMidPriority)
+                            icon =
+                                R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!,
+                                R.color.addTaskMidPriority
+                            )
                             callback = {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_mid_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMidPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskMidPriority
+                                ) )
                                 task.priority = 2
                             }
                         }
                         item {
                             label = "Низкий"
-                            icon = R.drawable.ic_dot_black_24dp
-                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskLowPriority)
+                            icon =
+                                R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!,
+                                R.color.addTaskLowPriority
+                            )
                             callback = {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_low_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskLowPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskLowPriority
+                                ) )
                                 task.priority = 3
                             }
                         }
                         item {
                             label = "Мин."
-                            icon = R.drawable.ic_dot_black_24dp
-                            iconColor = ContextCompat.getColor(context!!, R.color.addTaskMinPriority)
+                            icon =
+                                R.drawable.ic_dot_black_24dp
+                            iconColor = ContextCompat.getColor(context!!,
+                                R.color.addTaskMinPriority
+                            )
                             callback = {
                                 priorityInputTextView.text = resources.getString(R.string.add_task_min_priority)
-                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!, R.color.addTaskMinPriority) )
+                                priorityInputTextView.compoundDrawables[0].setTint( ContextCompat.getColor(context!!,
+                                    R.color.addTaskMinPriority
+                                ) )
                                 task.priority = 4
                             }
                         }
@@ -344,7 +399,9 @@ class AddTaskDialogFragment() : DialogFragment() {
                                         }
                                 }
                         } ?: run {
-                            val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
+                            val userDocumentReference = firestore.collection(getString(
+                                R.string.firestore_users_collection
+                            )).document(currentUser.uid)
                             userDocumentReference.update(
                                 "taskIds",
                                 FieldValue.arrayRemove(editableFileId)
@@ -365,7 +422,9 @@ class AddTaskDialogFragment() : DialogFragment() {
                             }
                         }
                     } ?: run {
-                        val userDocumentReference = firestore.collection(getString(R.string.firestore_users_collection)).document(currentUser.uid)
+                        val userDocumentReference = firestore.collection(getString(
+                            R.string.firestore_users_collection
+                        )).document(currentUser.uid)
                         firestore
                             .collection(resources.getString(R.string.firestore_tasks_collection))
                             .add(task)
@@ -388,7 +447,9 @@ class AddTaskDialogFragment() : DialogFragment() {
             ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), My_Permissions_Request_Location)
+            ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                My_Permissions_Request_Location
+            )
         }
     }
 

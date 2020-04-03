@@ -1,7 +1,6 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.data
 
 import android.util.Log
-import com.x3noku.dailymaps.classes.TimeLackException
 
 class FragmentTaskList(type: Int) {
 
@@ -273,7 +272,8 @@ class FragmentTaskList(type: Int) {
 fun List<MarkedTask?>.splitToFragments(): ArrayList<FragmentTaskList> {
     val taskList = this
     val fragmentList = arrayListOf<FragmentTaskList>()
-    var fragmentTaskList = FragmentTaskList( FragmentTaskList.DELAYED_NONE )
+    var fragmentTaskList =
+        FragmentTaskList(FragmentTaskList.DELAYED_NONE)
 
     for( (index, task) in taskList.withIndex() ) {
         task!!
@@ -283,16 +283,19 @@ fun List<MarkedTask?>.splitToFragments(): ArrayList<FragmentTaskList> {
         else {
             when(fragmentTaskList.type) {
                 FragmentTaskList.DELAYED_NONE -> {
-                    fragmentTaskList.type = FragmentTaskList.DELAYED_RIGHT
+                    fragmentTaskList.type =
+                        FragmentTaskList.DELAYED_RIGHT
                     fragmentTaskList.limiterRight = task
                 }
                 FragmentTaskList.DELAYED_LEFT -> {
-                    fragmentTaskList.type = FragmentTaskList.DELAYED_BOTH_SIDES
+                    fragmentTaskList.type =
+                        FragmentTaskList.DELAYED_BOTH_SIDES
                     fragmentTaskList.limiterRight = task
                 }
             }
             fragmentList.add(fragmentTaskList)
-            fragmentTaskList = FragmentTaskList( FragmentTaskList.DELAYED_LEFT )
+            fragmentTaskList =
+                FragmentTaskList(FragmentTaskList.DELAYED_LEFT)
             fragmentTaskList.limiterLeft = task
         }
 

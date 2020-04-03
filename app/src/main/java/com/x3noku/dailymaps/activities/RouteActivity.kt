@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.activities
 
 import android.Manifest
 import android.app.Dialog
@@ -39,7 +39,8 @@ import com.google.maps.model.DirectionsResult
 import com.google.maps.model.DirectionsRoute
 import com.google.maps.model.TravelMode
 import com.shashank.sony.fancytoastlib.FancyToast
-import com.x3noku.dailymaps.classes.TimeLackException
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.data.*
 import com.x3noku.dailymaps.utils.*
 import com.google.android.gms.maps.model.LatLng as MapsLatLng
 import com.google.maps.model.LatLng as DirectionsLatLng
@@ -103,7 +104,9 @@ class RouteActivity : AppCompatActivity() {
                     .addPolyline(
                         PolylineOptions().addAll(newDecodedPath)
                     )
-                    .color = ContextCompat.getColor(this, R.color.BLUE)
+                    .color = ContextCompat.getColor(this,
+                    R.color.BLUE
+                )
             }
         }
     }
@@ -114,11 +117,13 @@ class RouteActivity : AppCompatActivity() {
 
         getTemplate(templateId)
             .addOnSuccessListener { templateSnapshot ->
-                val template = Template(templateSnapshot)
+                val template =
+                    Template(templateSnapshot)
                 for( taskId in template.taskIds ) {
                     getTask(taskId)
                         .addOnSuccessListener { taskSnapshot ->
-                            val task = Task(taskSnapshot)
+                            val task =
+                                Task(taskSnapshot)
                             task.coords?.let { _ ->
                                 taskList.add(task)
                             }
@@ -147,7 +152,11 @@ class RouteActivity : AppCompatActivity() {
                 .setCallback(object : PendingResult.Callback<DirectionsResult> {
                     override fun onResult(result: DirectionsResult?) {
                         result?.let { dResult ->
-                            markedTaskList[index]  = MarkedTask(task, dResult.countRouteTime() )
+                            markedTaskList[index]  =
+                                MarkedTask(
+                                    task,
+                                    dResult.countRouteTime()
+                                )
                             drawPolylines(dResult)
 
                             if( !markedTaskList.contains(null) ) {

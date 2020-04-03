@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.activities
 
 import android.content.Intent
 import android.os.Build
@@ -7,17 +7,21 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.fragments.AddTaskDialogFragment
+import com.x3noku.dailymaps.fragments.ProfileFragment
+import com.x3noku.dailymaps.fragments.TaskListFragment
+import com.x3noku.dailymaps.fragments.TemplateDialogFragment
 
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         const val TAG = "MainActivity"
-
-        private var taskListFragment = TaskListFragment()
-        private var profileFragment = ProfileFragment()
     }
 
+    private var taskListFragment = TaskListFragment()
+    private var profileFragment = ProfileFragment()
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -46,14 +50,20 @@ class MainActivity : AppCompatActivity() {
                     AddTaskDialogFragment(id)
                         .show(supportFragmentManager, "AddTask")
                 "templates" ->
-                    TemplateDialogFragment(id, TemplateDialogFragment.SHARED)
+                    TemplateDialogFragment(
+                        id,
+                        TemplateDialogFragment.SHARED
+                    )
                         .show(supportFragmentManager, "Template")
 
             }
         }
 
         val fragmentTransaction: FragmentTransaction = supportFragmentManager.beginTransaction()
-        fragmentTransaction.add(R.id.main_frame_layout, taskListFragment)
+        fragmentTransaction.add(
+            R.id.main_frame_layout,
+            taskListFragment
+        )
         fragmentTransaction.commit()
 
         initBottomNavigation()
@@ -66,14 +76,22 @@ class MainActivity : AppCompatActivity() {
             val fragmentTransaction: FragmentTransaction = supportFragmentManager.beginTransaction()
             when(menuItem.itemId) {
                 R.id.bottom_navigation_home_item ->
-                    fragmentTransaction.replace(R.id.main_frame_layout, taskListFragment)
+                    fragmentTransaction.replace(
+                        R.id.main_frame_layout,
+                        taskListFragment
+                    )
 
                 R.id.bottom_navigation_add_task_item ->
-                    AddTaskDialogFragment( bottomNavigationView.selectedItemId )
+                    AddTaskDialogFragment(
+                        bottomNavigationView.selectedItemId
+                    )
                         .show(supportFragmentManager, "AddTask")
 
                 R.id.bottom_navigation_profile_item ->
-                    fragmentTransaction.replace(R.id.main_frame_layout, profileFragment)
+                    fragmentTransaction.replace(
+                        R.id.main_frame_layout,
+                        profileFragment
+                    )
 
             }
             fragmentTransaction.commit()
@@ -86,13 +104,17 @@ class MainActivity : AppCompatActivity() {
                     if (Build.VERSION.SDK_INT >= 26) {
                         fragmentTransaction.setReorderingAllowed(false)
                     }
-                    fragmentTransaction.detach(taskListFragment).attach(taskListFragment)
+                    fragmentTransaction.detach(taskListFragment).attach(
+                        taskListFragment
+                    )
                 }
                 R.id.bottom_navigation_profile_item -> {
                     if (Build.VERSION.SDK_INT >= 26) {
                         fragmentTransaction.setReorderingAllowed(false)
                     }
-                    fragmentTransaction.detach(profileFragment).attach(profileFragment)
+                    fragmentTransaction.detach(profileFragment).attach(
+                        profileFragment
+                    )
                 }
             }
             fragmentTransaction.commit()

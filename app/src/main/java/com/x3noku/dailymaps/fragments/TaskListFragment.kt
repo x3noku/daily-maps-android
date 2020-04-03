@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.fragments
 
 import android.content.Intent
 import android.net.Uri
@@ -17,6 +17,10 @@ import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.activities.LoginActivity
+import com.x3noku.dailymaps.data.Task
+import com.x3noku.dailymaps.data.UserInfo
 import com.x3noku.dailymaps.utils.doAsync
 import com.x3noku.dailymaps.utils.toDigitalView
 
@@ -40,7 +44,8 @@ class TaskListFragment : Fragment() {
                     Log.w(TAG, "Listen failed with '${e.message}' exception!")
                 }
                 if( snapshot != null && snapshot.exists() ) {
-                    val userInfo = UserInfo(snapshot)
+                    val userInfo =
+                        UserInfo(snapshot)
                     val taskListLinearLayout =
                         rootView.findViewById<LinearLayout>(R.id.task_list_linear_layout)
 
@@ -72,7 +77,8 @@ class TaskListFragment : Fragment() {
                 .document(taskId)
                 .get()
                 .addOnSuccessListener { documentSnapshot ->
-                    val task = Task(documentSnapshot)
+                    val task =
+                        Task(documentSnapshot)
                     val taskView =
                         LayoutInflater.from(context).inflate(R.layout.task_layout, this, false)
 
@@ -111,7 +117,10 @@ class TaskListFragment : Fragment() {
                         addToTemplateOptionTextView.setOnClickListener {
                             bottomSheetDialog.dismiss()
                             val addToTemplate =
-                                AddToTemplateDialogFragment(userId, documentSnapshot.id)
+                                AddToTemplateDialogFragment(
+                                    userId,
+                                    documentSnapshot.id
+                                )
                             addToTemplate.show(fragmentManager!!, "")
                         }
 
@@ -145,7 +154,10 @@ class TaskListFragment : Fragment() {
 
                         editOptionTextView.setOnClickListener {
                             bottomSheetDialog.dismiss()
-                            val addTask = AddTaskDialogFragment(taskId)
+                            val addTask =
+                                AddTaskDialogFragment(
+                                    taskId
+                                )
                             addTask.show(activity!!.supportFragmentManager, "AddTask")
                         }
 

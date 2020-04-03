@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,6 +9,9 @@ import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.data.Template
+import com.x3noku.dailymaps.data.UserInfo
 
 
 class AddToTemplateDialogFragment(private val currentUserId: String, private val editableTaskId: String) : DialogFragment() {
@@ -28,7 +31,8 @@ class AddToTemplateDialogFragment(private val currentUserId: String, private val
             for(templateId in userInfo.templateIds) {
                 val templateDocumentReference = firestore.collection(getString(R.string.firestore_templates_collection)).document(templateId)
                 templateDocumentReference.get().addOnSuccessListener { documentSnapshot ->
-                    val template = Template(documentSnapshot)
+                    val template =
+                        Template(documentSnapshot)
 
                     val templateView = layoutInflater.inflate(R.layout.template_layout, null)
                     templateView.findViewById<TextView>(R.id.template_primary_textview).text = template.text
@@ -49,7 +53,11 @@ class AddToTemplateDialogFragment(private val currentUserId: String, private val
 
         rootView.findViewById<TextView>(R.id.template_create_new_textview).setOnClickListener {
             dismiss()
-            val createTemplate = CreateTemplateDialogFragment(currentUserId, editableTaskId)
+            val createTemplate =
+                CreateTemplateDialogFragment(
+                    currentUserId,
+                    editableTaskId
+                )
             createTemplate.show(fragmentManager!!, "")
         }
         rootView.findViewById<TextView>(R.id.template_cancel_textview).setOnClickListener {

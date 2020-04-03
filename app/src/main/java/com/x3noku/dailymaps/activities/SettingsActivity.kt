@@ -1,9 +1,11 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.data.UserInfo
 
 class SettingsActivity : AppCompatActivity() {
     companion object {

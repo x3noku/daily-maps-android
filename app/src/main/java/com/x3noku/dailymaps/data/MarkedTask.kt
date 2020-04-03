@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.data
 
 import android.os.Handler
 import android.os.Looper

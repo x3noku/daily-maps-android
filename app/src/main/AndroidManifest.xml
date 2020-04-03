@@ -19,12 +19,11 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".RouteActivity"
+            android:name=".activities.RouteActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_route"
             android:theme="@style/FullscreenTheme" />
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:screenOrientation="sensorPortrait">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -38,7 +37,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".activities.LoginActivity"
             android:screenOrientation="sensorPortrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,7 +45,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SettingsActivity" />
+        <activity android:name=".activities.SettingsActivity" />
+        <activity android:name=".RegisterActivity" />
 
         <meta-data
             android:name="preloaded_fonts"

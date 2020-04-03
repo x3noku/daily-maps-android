@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBackground"
-    tools:context=".TemplateDialogFragment">
+    tools:context=".fragments.TemplateDialogFragment">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/template_toolbar"

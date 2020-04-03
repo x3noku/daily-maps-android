@@ -1,9 +1,10 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.activities
 
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -19,6 +20,9 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.shashank.sony.fancytoastlib.FancyToast
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.RegisterActivity
+import com.x3noku.dailymaps.data.UserInfo
 
 class LoginActivity : AppCompatActivity(),  View.OnClickListener {
 
@@ -35,11 +39,22 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        //declare the animation
+        val ttb = AnimationUtils.loadAnimation(this,R.anim.ttb)
+        val headerTitle  = findViewById<TextView>(R.id.hi)
+        //set animation
+        headerTitle.startAnimation(ttb)
+
         firebaseAuth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
         val registerLinkTextView = findViewById<TextView>(R.id.register_link_textview)
-        registerLinkTextView.setOnClickListener(this)
+        registerLinkTextView.setOnClickListener(){
+            Log.e("test_REG_DEB","registration_debug")
+            startActivity(Intent(this, RegisterActivity::class.java))
+            finish()
+            overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left)
+        }
 
         val logInButton = findViewById<Button>(R.id.log_in_button)
         logInButton.setOnClickListener(this)
@@ -47,7 +62,9 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
         val signInGoogleButton = findViewById<SignInButton>(R.id.sign_in_google_button)
         signInGoogleButton.setOnClickListener(this)
 
-        rootView = findViewById(R.id.activity_login_rootview)
+        rootView = findViewById(
+            R.id.activity_login_rootview
+        )
     }
 
     override fun onStart() {
@@ -120,7 +137,9 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
             .build()
         val googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions)
         val signInIntent = googleSignInClient.signInIntent
-        startActivityForResult(signInIntent, RC_SIGN_IN)
+        startActivityForResult(signInIntent,
+            RC_SIGN_IN
+        )
     }
 
     private fun authWithGoogle(account: GoogleSignInAccount ) {
@@ -146,7 +165,11 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                                 firestore
                                     .collection(getString(R.string.firestore_users_collection))
                                     .document(currentUserId)
-                                    .set(UserInfo(currentUserName))
+                                    .set(
+                                        UserInfo(
+                                            currentUserName
+                                        )
+                                    )
                                     .addOnSuccessListener {
                                         updateUI(currentUser)
                                     }
@@ -160,6 +183,9 @@ class LoginActivity : AppCompatActivity(),  View.OnClickListener {
                                                 false
                                             ).show()
                                     }
+                            }
+                            else {
+                                updateUI(currentUser)
                             }
                         }
                 }

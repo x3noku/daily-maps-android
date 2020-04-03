@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.fragments
 
 import android.content.Intent
 import android.net.Uri
@@ -19,6 +19,10 @@ import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.x3noku.dailymaps.R
+import com.x3noku.dailymaps.activities.LoginActivity
+import com.x3noku.dailymaps.data.Template
+import com.x3noku.dailymaps.data.UserInfo
 
 class ProfileFragment : Fragment() {
     companion object {
@@ -52,7 +56,8 @@ class ProfileFragment : Fragment() {
             userDocumentReference
                 .get()
                 .addOnSuccessListener { documentSnapshot ->
-                    val userInfo = UserInfo(documentSnapshot)
+                    val userInfo =
+                        UserInfo(documentSnapshot)
 
                     rootview
                         .findViewById<TextView>(R.id.profile_user_name_textview)
@@ -67,7 +72,9 @@ class ProfileFragment : Fragment() {
                             .collection(getString(R.string.firestore_templates_collection))
                             .document(templateId)
                         templateDocumentReference.get().addOnSuccessListener { documentSnapshot ->
-                            val template = Template(documentSnapshot)
+                            val template = Template(
+                                documentSnapshot
+                            )
 
                             val templateView =
                                 layoutInflater.inflate(R.layout.profile_template_layout, null)
@@ -171,7 +178,10 @@ class ProfileFragment : Fragment() {
                             }
 
                             templateView.setOnClickListener {
-                                TemplateDialogFragment(templateId, this).show(fragmentManager!!, "")
+                                TemplateDialogFragment(
+                                    templateId,
+                                    this
+                                ).show(fragmentManager!!, "")
                             }
 
                             rootview

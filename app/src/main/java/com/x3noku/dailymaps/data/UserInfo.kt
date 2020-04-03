@@ -1,4 +1,4 @@
-package com.x3noku.dailymaps
+package com.x3noku.dailymaps.data
 
 import com.google.firebase.firestore.DocumentSnapshot
 import java.util.*
